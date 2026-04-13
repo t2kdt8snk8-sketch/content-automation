@@ -47,3 +47,29 @@ async def save_result(run: WorkflowRun) -> Path:
         await f.write(json.dumps(payload, ensure_ascii=False, indent=2))
 
     return filepath
+
+
+async def list_results(limit: int = 20) -> list[dict]:
+    settings = get_settings()
+    outputs_dir = Path(settings.outputs_dir)
+    if not outputs_dir.exists():
+        return []
+
+    rows: list[dict] = []
+    for path in sorted(outputs_dir.glob("*.json"), reverse=True):
+        try:
+            async with aiofiles.open(path, encoding="utf-8") as f:
+                payload = json.loads(await f.read())
+            rows.append(
+                {
+                    "path": str(path),
+                    "task_id": payload.get("task_id"),
+                    "created_at": payload.get("created_at"),
+                    "user_message": payload.get("user_message"),
+                    "final_output": payload.get("final_output"),
+                    "status": payload.get("status"),
+                }
+            )
+        except Exception:
+            continue
+    return rows[:limit]

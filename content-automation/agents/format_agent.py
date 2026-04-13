@@ -5,13 +5,7 @@ from typing import Any
 
 from core.llm_client import call_haiku
 from core.models import AgentName, AgentResult, TaskRequest
-
-_SYSTEM = (
-    "You are a content formatter. Your only job is to take raw content and format it cleanly. "
-    "For markdown: use headers (##), bullet points, bold for key terms, and code blocks where needed. "
-    "For JSON: produce valid, well-structured JSON with clear keys. "
-    "Do NOT add, remove, or change any content — only improve the formatting and structure."
-)
+from prompts import load_prompt
 
 
 async def run(request: TaskRequest, tool_input: dict[str, Any]) -> AgentResult:
@@ -29,7 +23,7 @@ async def run(request: TaskRequest, tool_input: dict[str, Any]) -> AgentResult:
 
     try:
         formatted = await call_haiku(
-            system=_SYSTEM,
+            system=load_prompt("format_agent"),
             messages=[{"role": "user", "content": prompt}],
         )
     except Exception as e:

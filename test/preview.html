@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>컴포넌트 미리보기</title>
+  <link rel="stylesheet" href="./tokens.css" />
+  <style>
+    body {
+      font-family: var(--font-family-base);
+      background: #f9f9f9;
+      padding: 40px;
+      color: var(--color-text-primary);
+    }
+    h2 { margin-top: 40px; font-size: 18px; margin-bottom: 16px; }
+    .row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+    label { font-size: 12px; color: var(--color-text-secondary); width: 80px; }
+
+    /* ── Button ── */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 6px; height: 32px; padding: 0 12px; border-radius: 4px;
+      font-family: var(--font-family-base);
+      font-size: var(--type-size-14);
+      font-weight: var(--font-weight-semibold);
+      line-height: var(--type-line-height-20);
+      letter-spacing: var(--type-letter-spacing-0);
+      white-space: nowrap; cursor: pointer; border: none;
+      transition: opacity 0.15s;
+    }
+    .btn-primary   { background: var(--color-brand-primary); color: var(--color-background-primary); }
+    .btn-secondary { background: var(--color-background-primary); color: var(--color-brand-primary); border: 1.5px solid var(--color-brand-primary); }
+    .btn-ghost     { background: transparent; color: var(--color-text-primary); }
+    .btn-disabled  { background: var(--color-background-secondary); color: var(--color-text-secondary); border: 1px solid var(--color-border-default); cursor: not-allowed; opacity: 0.5; }
+
+    /* ── Tag ── */
+    .tag {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 4px; height: 40px; padding: 0 14px; border-radius: 9999px;
+      font-family: var(--font-family-base);
+      font-size: var(--type-size-14);
+      font-weight: var(--font-weight-semibold);
+      line-height: var(--type-line-height-20);
+      letter-spacing: var(--type-letter-spacing-0);
+      white-space: nowrap; cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .tag-default   { background: var(--color-background-primary); color: var(--color-text-primary); border: 1px solid var(--color-border-default); }
+    .tag-selected  { background: var(--color-brand-primary); color: var(--color-background-primary); border: 1.5px solid var(--color-brand-primary); }
+    .tag-disabled  { background: var(--color-background-secondary); color: var(--color-text-secondary); border: 1px solid var(--color-border-default); cursor: not-allowed; opacity: 0.5; }
+
+    /* icon mock */
+    .icon { width: 14px; height: 14px; display: inline-block; background: currentColor; border-radius: 2px; opacity: 0.7; }
+  </style>
+</head>
+<body>
+
+<h1 style="font-size:var(--type-size-38); font-weight:var(--font-weight-bold); line-height:var(--type-line-height-38)">
+  컴포넌트 미리보기
+</h1>
+
+<!-- ───────── Button ───────── -->
+<h2>Button</h2>
+
+<div class="row">
+  <label>primary</label>
+  <button class="btn btn-primary">앱 다운로드</button>
+</div>
+<div class="row">
+  <label>secondary</label>
+  <button class="btn btn-secondary">앱 다운로드</button>
+</div>
+<div class="row">
+  <label>ghost</label>
+  <button class="btn btn-ghost">앱 다운로드</button>
+</div>
+<div class="row">
+  <label>disabled</label>
+  <button class="btn btn-disabled" disabled>앱 다운로드</button>
+</div>
+<div class="row">
+  <label>icon left</label>
+  <button class="btn btn-primary"><span class="icon"></span>앱 다운로드</button>
+</div>
+<div class="row">
+  <label>icon right</label>
+  <button class="btn btn-secondary">앱 다운로드<span class="icon"></span></button>
+</div>
+
+<!-- ───────── Tag ───────── -->
+<h2>Tag</h2>
+
+<div class="row">
+  <label>default</label>
+  <button class="tag tag-default">송도동</button>
+</div>
+<div class="row">
+  <label>selected</label>
+  <button class="tag tag-selected">송도동</button>
+</div>
+<div class="row">
+  <label>disabled</label>
+  <button class="tag tag-disabled" disabled>송도동</button>
+</div>
+<div class="row">
+  <label>icon</label>
+  <button class="tag tag-default"><span class="icon"></span>송도동</button>
+</div>
+<div class="row">
+  <label>icon+selected</label>
+  <button class="tag tag-selected"><span class="icon"></span>송도동</button>
+</div>
+
+</body>
+</html>

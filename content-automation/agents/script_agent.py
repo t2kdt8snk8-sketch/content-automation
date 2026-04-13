@@ -5,17 +5,7 @@ from typing import Any
 
 from core.llm_client import call_sonnet
 from core.models import AgentName, AgentResult, TaskRequest
-
-_SYSTEM = (
-    "You are a video script writer specializing in music, culture, and lifestyle content. "
-    "Structure every script with clearly labeled sections:\n"
-    "- HOOK (first 3 seconds — must grab attention instantly)\n"
-    "- INTRO (brief context)\n"
-    "- SECTION 1, 2, 3... (main content, each with a clear point)\n"
-    "- CTA (call to action — follow, like, comment, save)\n\n"
-    "Match pacing to the platform: TikTok/Reels are punchy; YouTube allows depth. "
-    "Include on-screen text suggestions in [brackets]."
-)
+from prompts import load_prompt
 
 
 async def run(request: TaskRequest, tool_input: dict[str, Any]) -> AgentResult:
@@ -36,7 +26,7 @@ async def run(request: TaskRequest, tool_input: dict[str, Any]) -> AgentResult:
 
     try:
         content = await call_sonnet(
-            system=_SYSTEM,
+            system=load_prompt("script_agent"),
             messages=[{"role": "user", "content": "\n".join(prompt_parts)}],
         )
     except Exception as e:

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Claude 워크스페이스 대시보드</title>
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.css" />
+    <style>
+      /* ============================================================
+         UI/UX Polish — ui-ux-pro-max recommendations
+         적용: dark dashboard (zinc base, violet/amber accent)
+         원칙: inline-style React라 attribute selector + !important
+         ============================================================ */
+
+      :root {
+        color-scheme: dark;
+        --accent: #a78bfa;
+        --accent-strong: #c4b5fd;
+        --warn: #fbbf24;
+        --ok: #4ade80;
+        --bg: #09090b;
+        --card: #18181b;
+        --border: #27272a;
+        --border-hover: #3f3f46;
+      }
+
+      /* ── 타이포그래피 (Pretendard + system fallback) ───────── */
+      html, body, button, input, textarea, select {
+        font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont,
+                     'SF Pro Display', 'Apple SD Gothic Neo', system-ui, sans-serif !important;
+        -webkit-font-smoothing: antialiased !important;
+        -moz-osx-font-smoothing: grayscale !important;
+        text-rendering: optimizeLegibility;
+        letter-spacing: -0.011em !important;
+        font-feature-settings: "ss01", "ss02", "cv01", "tnum" !important;
+      }
+
+      /* monospace 톤 통일 (sessionId, path 등) */
+      [style*="monospace"] {
+        font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular,
+                     Menlo, Consolas, monospace !important;
+        font-feature-settings: "calt" 1 !important;
+        letter-spacing: -0.01em !important;
+      }
+
+      /* 굵은 숫자/제목 — tabular numerals + tight tracking */
+      [style*="font-weight: 700"], [style*="font-weight: 600"] {
+        letter-spacing: -0.022em !important;
+        font-feature-settings: "tnum" 1, "case" 1 !important;
+      }
+
+      /* 한글 줄바꿈 — 단어 단위 */
+      body, p, div, span, li {
+        word-break: keep-all;
+        overflow-wrap: anywhere;
+      }
+
+      /* ── 카드 (background: rgb(24, 24, 27)) ─────────────────── */
+      div[style*="rgb(24, 24, 27)"] {
+        transition: border-color 220ms cubic-bezier(0.4, 0, 0.2, 1),
+                    background-color 220ms cubic-bezier(0.4, 0, 0.2, 1),
+                    box-shadow 220ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+      }
+      div[style*="rgb(24, 24, 27)"]:hover {
+        border-color: rgb(63, 63, 70) !important;
+        box-shadow: 0 4px 24px -8px rgba(167, 139, 250, 0.18),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.025) !important;
+      }
+
+      /* outer wrap (#09090b base) */
+      div[style*="rgb(9, 9, 11)"][style*="border-radius"] {
+        transition: border-color 220ms ease, box-shadow 220ms ease !important;
+      }
+
+      /* ── 버튼 ──────────────────────────────────────────────── */
+      button {
+        cursor: pointer !important;
+        transition: background 180ms cubic-bezier(0.4, 0, 0.2, 1),
+                    border-color 180ms cubic-bezier(0.4, 0, 0.2, 1),
+                    color 180ms cubic-bezier(0.4, 0, 0.2, 1),
+                    filter 180ms cubic-bezier(0.4, 0, 0.2, 1),
+                    transform 120ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+      }
+      button:hover:not(:disabled) {
+        filter: brightness(1.18) saturate(1.05) !important;
+      }
+      button:active:not(:disabled) {
+        transform: translateY(1px) scale(0.985) !important;
+      }
+
+      /* 사이드바 active (violet 강조 — rgba(167, 139, 250, 0.133)) */
+      button[style*="rgb(167, 139, 250)"] {
+        box-shadow: inset 3px 0 0 rgb(167, 139, 250),
+                    0 0 18px -8px rgba(167, 139, 250, 0.45) !important;
+      }
+
+      /* ── 접근성 (focus-visible) ───────────────────────────── */
+      *:focus-visible {
+        outline: 2px solid var(--warn) !important;
+        outline-offset: 2px !important;
+        border-radius: 4px;
+      }
+      button:focus-visible {
+        box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--warn) !important;
+        outline: none !important;
+      }
+
+      /* ── 마이크로 인터랙션 ─────────────────────────────────── */
+
+      /* 작업중 dot pulse (#4ade80) */
+      span[style*="rgb(74, 222, 128)"][style*="border-radius: 50%"] {
+        animation: pulse-ok 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+      }
+      @keyframes pulse-ok {
+        0%, 100% { box-shadow: 0 0 6px #4ade80, 0 0 0 0 rgba(74, 222, 128, 0.4); }
+        50%      { box-shadow: 0 0 12px #4ade80, 0 0 0 4px rgba(74, 222, 128, 0); }
+      }
+
+      /* 승인 대기 dot pulse (#f59e0b) */
+      span[style*="rgb(245, 158, 11)"][style*="border-radius: 50%"] {
+        animation: pulse-warn 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+      }
+      @keyframes pulse-warn {
+        0%, 100% { box-shadow: 0 0 6px #f59e0b, 0 0 0 0 rgba(245, 158, 11, 0.5); }
+        50%      { box-shadow: 0 0 12px #f59e0b, 0 0 0 4px rgba(245, 158, 11, 0); }
+      }
+
+      /* ── 스크롤바 ─────────────────────────────────────────── */
+      ::-webkit-scrollbar {
+        width: 10px !important;
+        height: 10px !important;
+      }
+      ::-webkit-scrollbar-track {
+        background: var(--bg) !important;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #2a2a2e !important;
+        border-radius: 6px !important;
+        border: 2px solid var(--bg) !important;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--border-hover) !important;
+      }
+
+      /* selection */
+      ::selection {
+        background: rgba(167, 139, 250, 0.32);
+        color: #f4f4f5;
+      }
+
+      /* ── 능력 맵 — list → grid 변환 ──────────────────────── */
+      /* 카테고리 컨테이너 (에이전트, 스킬, 훅, 권한, 플러그인 등) */
+      div[style*="rgb(17, 17, 24)"][style*="padding: 12px"][style*="border-radius: 0px 0px 10px 10px"] {
+        display: grid !important;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
+        gap: 6px !important;
+      }
+      /* 각 항목의 margin-bottom 제거 (gap이 대신함) */
+      div[style*="rgb(17, 17, 24)"][style*="padding: 12px"][style*="border-radius: 0px 0px 10px 10px"] > div[style*="margin-bottom"] {
+        margin-bottom: 0 !important;
+      }
+      /* grid 안의 button 은 폭 100% 유지 */
+      div[style*="rgb(17, 17, 24)"][style*="padding: 12px"][style*="border-radius: 0px 0px 10px 10px"] button {
+        width: 100% !important;
+        height: 100%;
+      }
+
+      /* ── prefers-reduced-motion (a11y) ────────────────────── */
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+          scroll-behavior: auto !important;
+        }
+      }
+    </style>
+    <script type="module" crossorigin src="/assets/index-DYwNDC3K.js"></script>
+  </head>
+  <body style="margin:0; background:#09090b;">
+    <div id="root"></div>
+  </body>
+</html>

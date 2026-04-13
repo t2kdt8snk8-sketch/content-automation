@@ -193,6 +193,55 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
             "required": ["content_to_format"],
         },
     },
+    {
+        "name": AgentName.SCANNER,
+        "description": (
+            "Scan multiple categories and return the strongest low-saturation, "
+            "high-demand content opportunities."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "categories": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "List of categories to scan",
+                },
+                "limit": {
+                    "type": "integer",
+                    "description": "Maximum number of opportunities to return",
+                },
+            },
+            "required": ["categories"],
+        },
+    },
+    {
+        "name": AgentName.STRATEGY,
+        "description": (
+            "Analyze accumulated research data and generate OpportunityCards for the feed. "
+            "Synthesizes research signals into actionable content opportunities with scoring. "
+            "Use when you want a strategic overview of what to create next."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "min_score": {
+                    "type": "integer",
+                    "description": "Minimum opportunity_score threshold (default: 65)",
+                },
+                "max_cards": {
+                    "type": "integer",
+                    "description": "Maximum number of cards to generate (default: 3)",
+                },
+                "source_research_ids": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Research result IDs to include as sources",
+                },
+            },
+            "required": [],
+        },
+    },
 ]
 
 # Name → enum value lookup for quick validation
@@ -206,7 +255,9 @@ def get_agent_callable(name: str) -> AgentCallable:
         format_agent,
         image_prompt_agent,
         research_agent,
+        scanner_agent,
         script_agent,
+        strategy_agent,
     )
 
     mapping: dict[str, AgentCallable] = {
@@ -215,6 +266,8 @@ def get_agent_callable(name: str) -> AgentCallable:
         AgentName.IMAGE_PROMPT: image_prompt_agent.run,
         AgentName.SCRIPT: script_agent.run,
         AgentName.FORMAT: format_agent.run,
+        AgentName.SCANNER: scanner_agent.run,
+        AgentName.STRATEGY: strategy_agent.run,
     }
     agent_name = AgentName(name)
     if agent_name not in mapping:

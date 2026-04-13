@@ -15,6 +15,16 @@ class Settings(BaseSettings):
     model_sonnet: str = Field(default="claude-sonnet-4-6", alias="MODEL_SONNET")
     model_haiku: str = Field(default="claude-haiku-4-5-20251001", alias="MODEL_HAIKU")
 
+    # External research sources
+    news_api_key: str | None = Field(default=None, alias="NEWS_API_KEY")
+    youtube_data_api_key: str | None = Field(
+        default=None, alias="YOUTUBE_DATA_API_KEY"
+    )
+    reddit_client_id: str | None = Field(default=None, alias="REDDIT_CLIENT_ID")
+    reddit_client_secret: str | None = Field(
+        default=None, alias="REDDIT_CLIENT_SECRET"
+    )
+
     # Telegram (없으면 텔레그램 봇 비활성화, 웹 UI만 실행)
     telegram_bot_token: str | None = Field(default=None, alias="TELEGRAM_BOT_TOKEN")
     allowed_telegram_user_id: str | None = Field(
@@ -27,6 +37,21 @@ class Settings(BaseSettings):
 
     # Storage
     outputs_dir: str = Field(default="outputs", alias="OUTPUTS_DIR")
+    scan_categories: str = Field(
+        default="neo-soul,k-hip-hop,indie pop,jazz,lifestyle trends",
+        alias="SCAN_CATEGORIES",
+    )
+    scan_interval_hours: int = Field(default=6, alias="SCAN_INTERVAL_HOURS")
+    scan_interval_minutes: int | None = Field(
+        default=None, alias="SCAN_INTERVAL_MINUTES"
+    )
+
+    # 자율 리서치 누적 루프 (research_loop)
+    research_interval_minutes: int = Field(default=30, alias="RESEARCH_INTERVAL_MINUTES")
+
+    # 전략 분석 루프 (strategy_loop)
+    strategy_interval_minutes: int = Field(default=60, alias="STRATEGY_INTERVAL_MINUTES")
+    strategy_min_new_items: int = Field(default=3, alias="STRATEGY_MIN_NEW_ITEMS")
 
     # Logging
     log_level: str = Field(default="INFO", alias="LOG_LEVEL")

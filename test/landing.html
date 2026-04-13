@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>당근 — 우리 동네 앱</title>
+  <link rel="stylesheet" href="./tokens.css" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-family-base);
+      background: var(--color-background-secondary);
+      color: var(--color-text-primary);
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--color-background-primary);
+      border-bottom: 1px solid var(--color-border-default);
+    }
+    .header-inner {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 80px;
+      height: 68px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .logo {
+      font-size: var(--type-size-16);
+      font-weight: var(--font-weight-bold);
+      color: var(--color-text-primary);
+      letter-spacing: -0.3px;
+    }
+    .logo span { color: var(--color-brand-primary); }
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .icon-btn {
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      font-size: 18px;
+      color: var(--color-text-secondary);
+      opacity: 0.5;
+      transition: opacity 0.15s;
+    }
+    .icon-btn:hover { opacity: 1; }
+
+    /* ── Button (from component) ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      height: 32px;
+      padding: 0 12px;
+      border-radius: 4px;
+      font-family: var(--font-family-base);
+      font-size: var(--type-size-14);
+      font-weight: var(--font-weight-semibold);
+      line-height: var(--type-line-height-20);
+      letter-spacing: var(--type-letter-spacing-0);
+      white-space: nowrap;
+      cursor: pointer;
+      border: none;
+      transition: opacity 0.15s;
+    }
+    .btn-primary {
+      background: var(--color-brand-primary);
+      color: var(--color-background-primary);
+    }
+    .btn-primary:hover { opacity: 0.85; }
+
+    /* ── Hero ── */
+    .hero {
+      background: var(--color-background-primary);
+      padding: 80px 0 60px;
+    }
+    .hero-inner {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 80px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 32px;
+    }
+
+    /* ── Title ── */
+    .hero-title {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .hero-title-icon {
+      font-size: 32px;
+      line-height: 1;
+    }
+    .hero-title-text {
+      font-size: var(--type-size-38);
+      font-weight: var(--font-weight-bold);
+      line-height: var(--type-line-height-38);
+      color: var(--color-text-primary);
+      white-space: nowrap;
+    }
+
+    /* ── SearchBar ── */
+    .search-wrap {
+      width: 100%;
+      max-width: 754px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .search-bar {
+      display: flex;
+      align-items: center;
+      height: 50px;
+      border: 1px solid var(--color-border-default);
+      border-radius: 9999px;
+      background: var(--color-background-primary);
+      padding: 1px 8px 1px 21px;
+      transition: border-color 0.15s;
+    }
+    .search-bar:focus-within {
+      border-color: var(--color-text-primary);
+    }
+    .search-dropdown {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding-right: 12px;
+      border-right: 1px solid var(--color-border-default);
+      cursor: pointer;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .search-dropdown-text {
+      font-size: var(--type-size-16);
+      font-weight: var(--font-weight-semibold);
+      color: var(--color-text-secondary);
+      white-space: nowrap;
+    }
+    .search-dropdown-arrow { font-size: 11px; color: var(--color-text-secondary); }
+    .search-input {
+      flex: 1;
+      border: none;
+      outline: none;
+      font-family: var(--font-family-base);
+      font-size: var(--type-size-16);
+      font-weight: var(--font-weight-semibold);
+      color: var(--color-text-primary);
+      padding: 0 16px;
+      background: transparent;
+    }
+    .search-input::placeholder { color: var(--color-text-placeholder); font-weight: var(--font-weight-regular); }
+    .search-submit {
+      width: 28px;
+      height: 28px;
+      border-radius: 9999px;
+      background: var(--color-text-primary);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 13px;
+      color: var(--color-background-primary);
+      transition: background 0.15s;
+    }
+    .search-submit:hover { background: var(--color-brand-primary); }
+
+    /* ── Popular Searches ── */
+    .popular {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      overflow: hidden;
+      width: 100%;
+      max-width: 754px;
+    }
+    .popular-label {
+      font-size: var(--type-size-14);
+      font-weight: var(--font-weight-regular);
+      color: var(--color-text-secondary);
+      padding-right: 16px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .popular-list {
+      display: flex;
+      gap: 0;
+      overflow: hidden;
+      mask-image: linear-gradient(to right, black 80%, transparent 100%);
+      -webkit-mask-image: linear-gradient(to right, black 80%, transparent 100%);
+    }
+    .popular-item {
+      font-size: var(--type-size-14);
+      font-weight: var(--font-weight-regular);
+      color: var(--color-text-secondary);
+      padding-right: 12px;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: color 0.12s;
+      line-height: var(--type-line-height-24);
+    }
+    .popular-item:hover { color: var(--color-brand-primary); }
+
+    /* ── Main content ── */
+    .main {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 40px 80px;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+
+    /* ── Card Grid ── */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+    .card {
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+      padding: 12px 16px;
+      background: var(--color-background-primary);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: box-shadow 0.15s;
+      border: 1px solid transparent;
+    }
+    .card:hover {
+      box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+      border-color: var(--color-border-default);
+    }
+    .card-icon { font-size: 24px; line-height: 1; }
+    .card-label {
+      font-size: var(--type-size-16);
+      font-weight: var(--font-weight-semibold);
+      line-height: var(--type-line-height-24);
+      color: var(--color-text-primary);
+      white-space: nowrap;
+    }
+
+    /* ── Tag List ── */
+    .tag-section {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .tag-row {
+      display: flex;
+      gap: 9px;
+      flex-wrap: wrap;
+    }
+
+    /* ── Tag (from component) ── */
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      height: 40px;
+      padding: 0 14px;
+      border-radius: 9999px;
+      font-family: var(--font-family-base);
+      font-size: var(--type-size-14);
+      font-weight: var(--font-weight-semibold);
+      line-height: var(--type-line-height-20);
+      letter-spacing: var(--type-letter-spacing-0);
+      white-space: nowrap;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      border: 1px solid var(--color-border-default);
+      background: var(--color-background-primary);
+      color: var(--color-text-primary);
+    }
+    .tag:hover,
+    .tag.selected {
+      background: var(--color-brand-primary);
+      color: var(--color-background-primary);
+      border-color: var(--color-brand-primary);
+    }
+
+    /* ── Dropdown menu ── */
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      top: calc(100% + 8px);
+      left: -21px;
+      background: var(--color-background-primary);
+      border: 1px solid var(--color-border-default);
+      border-radius: 8px;
+      overflow: hidden;
+      z-index: 10;
+      min-width: 130px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .search-dropdown:hover .dropdown-menu,
+    .dropdown-menu:hover { display: block; }
+    .dropdown-item {
+      padding: 10px 16px;
+      font-family: var(--font-family-base);
+      font-size: var(--type-size-14);
+      font-weight: var(--font-weight-regular);
+      color: var(--color-text-primary);
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .dropdown-item:hover,
+    .dropdown-item.active {
+      background: #fff5ef;
+      color: var(--color-brand-primary);
+      font-weight: var(--font-weight-semibold);
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Header ── -->
+<header class="header">
+  <div class="header-inner">
+    <div class="logo"><span>당근</span></div>
+    <div class="header-actions">
+      <button class="icon-btn" title="검색">🔍</button>
+      <button class="btn btn-primary">앱 다운로드</button>
+    </div>
+  </div>
+</header>
+
+<!-- ── Hero ── -->
+<section class="hero">
+  <div class="hero-inner">
+
+    <!-- 타이틀 -->
+    <div class="hero-title">
+      <span class="hero-title-icon">📍</span>
+      <h1 class="hero-title-text">아이폰 찾고 계신가요?</h1>
+    </div>
+
+    <!-- 검색바 -->
+    <div class="search-wrap">
+      <div class="search-bar">
+        <div class="search-dropdown">
+          <span class="search-dropdown-text">중고거래</span>
+          <span class="search-dropdown-arrow">▾</span>
+          <div class="dropdown-menu">
+            <div class="dropdown-item active">중고거래</div>
+            <div class="dropdown-item">부동산</div>
+            <div class="dropdown-item">알바·채용</div>
+            <div class="dropdown-item">중고차</div>
+          </div>
+        </div>
+        <input
+          class="search-input"
+          type="text"
+          placeholder="검색어를 입력해주세요"
+        />
+        <button class="search-submit">→</button>
+      </div>
+
+      <!-- 인기 검색어 -->
+      <div class="popular">
+        <span class="popular-label">인기 검색어</span>
+        <div class="popular-list">
+          <span class="popular-item">에어컨</span>
+          <span class="popular-item">에어컨청소</span>
+          <span class="popular-item">노트북</span>
+          <span class="popular-item">원룸</span>
+          <span class="popular-item">현대 중고차</span>
+          <span class="popular-item">이사짐 알바</span>
+          <span class="popular-item">근처 맛집</span>
+          <span class="popular-item">투표</span>
+          <span class="popular-item">동네친구</span>
+          <span class="popular-item">배드민턴 모임</span>
+          <span class="popular-item">자전거</span>
+          <span class="popular-item">플스</span>
+          <span class="popular-item">투룸 빌라</span>
+          <span class="popular-item">닌텐도</span>
+          <span class="popular-item">서빙 알바</span>
+          <span class="popular-item">기아 중고차</span>
+          <span class="popular-item">전세 매물</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ── Main ── -->
+<main class="main">
+
+  <!-- 카드 그리드 -->
+  <div class="card-grid">
+    <div class="card">
+      <span class="card-icon">🛒</span>
+      <span class="card-label">중고거래</span>
+    </div>
+    <div class="card">
+      <span class="card-icon">🏠</span>
+      <span class="card-label">부동산</span>
+    </div>
+    <div class="card">
+      <span class="card-icon">💼</span>
+      <span class="card-label">알바·채용</span>
+    </div>
+    <div class="card">
+      <span class="card-icon">🚗</span>
+      <span class="card-label">중고차</span>
+    </div>
+    <div class="card">
+      <span class="card-icon">🍽️</span>
+      <span class="card-label">맛집</span>
+    </div>
+    <div class="card">
+      <span class="card-icon">👥</span>
+      <span class="card-label">동네모임</span>
+    </div>
+    <div class="card">
+      <span class="card-icon">🎮</span>
+      <span class="card-label">게임·취미</span>
+    </div>
+    <div class="card">
+      <span class="card-icon">🔧</span>
+      <span class="card-label">생활서비스</span>
+    </div>
+  </div>
+
+  <!-- 태그 목록 -->
+  <div class="tag-section">
+    <div class="tag-row">
+      <button class="tag selected">역삼동</button>
+      <button class="tag">송도동</button>
+      <button class="tag">강남구</button>
+      <button class="tag">마포구</button>
+      <button class="tag">서초동</button>
+      <button class="tag">판교동</button>
+      <button class="tag">분당구</button>
+      <button class="tag">수지구</button>
+      <button class="tag">동작구</button>
+      <button class="tag">광진구</button>
+      <button class="tag">노원구</button>
+    </div>
+    <div class="tag-row">
+      <button class="tag">성수동</button>
+      <button class="tag">합정동</button>
+      <button class="tag">홍대입구</button>
+      <button class="tag">여의도동</button>
+      <button class="tag">이태원동</button>
+      <button class="tag">신촌동</button>
+      <button class="tag">목동</button>
+      <button class="tag">상암동</button>
+      <button class="tag">은평구</button>
+    </div>
+  </div>
+
+</main>
+
+<script>
+  // 태그 선택 토글
+  document.querySelectorAll('.tag').forEach(tag => {
+    tag.addEventListener('click', () => {
+      document.querySelectorAll('.tag').forEach(t => t.classList.remove('selected'));
+      tag.classList.add('selected');
+    });
+  });
+
+  // 드롭다운 항목 선택
+  document.querySelectorAll('.dropdown-item').forEach(item => {
+    item.addEventListener('click', () => {
+      document.querySelector('.search-dropdown-text').textContent = item.textContent;
+      document.querySelectorAll('.dropdown-item').forEach(i => i.classList.remove('active'));
+      item.classList.add('active');
+    });
+  });
+</script>
+
+</body>
+</html>

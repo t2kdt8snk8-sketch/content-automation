@@ -15,9 +15,14 @@ from telegram.ext import (
 )
 
 from bot.message_formatter import format_for_telegram, split_long_message
-from core.models import TaskRequest
-from core.orchestrator import run_workflow
+from core.bridge import build_enriched_message, extract_params
+from core.models import ResearchGoal, ResearchRequest, TaskRequest
+from core.orchestrator import run_agent, run_chat, run_workflow
+from core.router import route
+from research.orchestrator import run_research
+from storage.conversation_store import append_message, load, set_mode, update_params
 from storage.output_store import save_result
+from storage.research_store import save_research_result
 
 _HELP_TEXT = (
     "*Content Automation Bot*\n\n"
@@ -78,51 +83,117 @@ class ContentAutomationBot:
             return
 
         task_id = str(uuid.uuid4())
-
-        # Acknowledge immediately — LLM calls take 30-90 seconds
-        status_msg = await update.message.reply_text(
-            "Processing your request... (30-90 seconds)"
+        request = TaskRequest(
+            task_id=task_id,
+            user_message=user_text,
+            chat_id=chat_id,
         )
 
+        # 라우팅 결정
+        route_result = await route(user_text)
+        logger.info(
+            f"[{task_id}] route={route_result.path} "
+            f"source={route_result.source} user={user_id}: {user_text[:80]}"
+        )
+
+        # 모드별 대기 메시지
+        if route_result.path == "chat":
+            status_msg = await update.message.reply_text("🤖 채팅 중...")
+        else:
+            status_msg = await update.message.reply_text("⚙️ 작업 중... (30-90초)")
+
         try:
-            request = TaskRequest(
-                task_id=task_id,
-                user_message=user_text,
-                chat_id=chat_id,
-            )
+            state = await load(chat_id)
 
-            logger.info(f"[{task_id}] Request from {user_id}: {user_text[:80]}")
-            workflow_run = await run_workflow(request)
+            if route_result.path == "chat":
+                await set_mode(chat_id, "chat")
 
-            output_path = await save_result(workflow_run)
-            logger.info(f"[{task_id}] Saved to {output_path}")
+                # 파라미터 추출 — 대화 맥락 누적
+                params = await extract_params(user_text)
+                if params:
+                    state = await update_params(chat_id, params)
+                    logger.info(f"[{task_id}] extracted params: {params}")
 
-            if workflow_run.final_output:
-                response_text = format_for_telegram(workflow_run.final_output)
-                chunks = split_long_message(response_text, max_length=4000)
+                reply = await run_chat(request, state)
+                await append_message(chat_id, "user", user_text)
+                await append_message(chat_id, "assistant", reply)
 
-                # Delete the "processing..." message
                 await status_msg.delete()
-
+                chunks = split_long_message(reply, max_length=4000)
                 for chunk in chunks:
-                    try:
-                        await update.message.reply_text(
-                            chunk, parse_mode=ParseMode.MARKDOWN
-                        )
-                    except Exception:
-                        # Fallback: send without markdown if formatting fails
-                        await update.message.reply_text(chunk)
-            else:
-                await status_msg.edit_text(
-                    "Failed to generate content. Please try again with a different request."
+                    await update.message.reply_text(chunk)
+
+            elif route_result.path == "research":
+                await set_mode(chat_id, "work")
+                goal = route_result.research_goal or ResearchGoal.DEEP_DIVE
+                research_request = ResearchRequest(
+                    chat_id=chat_id,
+                    goal=goal,
+                    query=user_text,
+                    seed_topics=[user_text] if goal == ResearchGoal.DEEP_DIVE else [],
                 )
+                result = await run_research(research_request)
+                await save_research_result(result)
+                await append_message(chat_id, "user", user_text)
+                await append_message(chat_id, "assistant", result.summary)
+
+                await status_msg.delete()
+                chunks = split_long_message(
+                    format_for_telegram(result.summary), max_length=4000
+                )
+                for chunk in chunks:
+                    await update.message.reply_text(chunk)
+
+            elif route_result.path == "agent" and route_result.agent_name:
+                await set_mode(chat_id, "work")
+                result = await run_agent(request, route_result.agent_name, state=state)
+                await append_message(chat_id, "user", user_text)
+
+                await status_msg.delete()
+                if result.success:
+                    await append_message(chat_id, "assistant", result.content)
+                    chunks = split_long_message(
+                        format_for_telegram(result.content), max_length=4000
+                    )
+                    for chunk in chunks:
+                        try:
+                            await update.message.reply_text(chunk, parse_mode=ParseMode.MARKDOWN)
+                        except Exception:
+                            await update.message.reply_text(chunk)
+                else:
+                    await update.message.reply_text(f"에이전트 실행 실패: {result.error}")
+
+            else:  # workflow
+                await set_mode(chat_id, "work")
+                enriched_message = build_enriched_message(state, user_text)
+                enriched_request = TaskRequest(
+                    task_id=task_id,
+                    user_message=enriched_message,
+                    chat_id=chat_id,
+                )
+                workflow_run = await run_workflow(enriched_request)
+                await save_result(workflow_run)
+                await append_message(chat_id, "user", user_text)
+
+                await status_msg.delete()
+                if workflow_run.final_output:
+                    await append_message(chat_id, "assistant", workflow_run.final_output)
+                    response_text = format_for_telegram(workflow_run.final_output)
+                    chunks = split_long_message(response_text, max_length=4000)
+                    for chunk in chunks:
+                        try:
+                            await update.message.reply_text(chunk, parse_mode=ParseMode.MARKDOWN)
+                        except Exception:
+                            await update.message.reply_text(chunk)
+                else:
+                    await update.message.reply_text(
+                        "콘텐츠 생성에 실패했어요. 다르게 요청해보세요."
+                    )
 
         except Exception as e:
             logger.error(f"[{task_id}] Unhandled error: {e}", exc_info=True)
             try:
-                await status_msg.edit_text(
-                    f"An error occurred: {str(e)[:200]}\n\nPlease try again."
-                )
+                await status_msg.edit_text(f"오류가 발생했어요: {str(e)[:200]}\n\n다시 시도해주세요.")
             except Exception:
                 pass
 

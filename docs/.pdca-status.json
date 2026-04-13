@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-03-21T12:52:18.906Z",
+  "lastUpdated": "2026-04-04T03:30:02.910Z",
   "activeFeatures": [
     "ai",
     "insta-analyzer",
@@ -10,7 +10,16 @@
     "scraper",
     "discover",
     "analyze",
-    "scripts"
+    "scripts",
+    "test",
+    "meta-synthesize",
+    "verify-accounts",
+    "song-awareness-checker",
+    "spotify",
+    "trends",
+    "lastfm",
+    "score",
+    "render"
   ],
   "primaryFeature": "ai",
   "features": {
@@ -23,9 +32,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-18T12:46:59.483Z",
-        "lastUpdated": "2026-03-20T18:17:15.727Z"
+        "lastUpdated": "2026-03-25T13:54:43.221Z"
       },
-      "lastFile": "/Users/minsoopark/Downloads/바이브코딩/insta-analyzer/src/lib/ai/provider.ts"
+      "lastFile": "/Users/minsoopark/Downloads/바이브코딩/insta-analyzer/src/lib/ai/prompts.ts"
     },
     "insta-analyzer": {
       "phase": "do",
@@ -36,9 +45,9 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-18T13:15:14.817Z",
-        "lastUpdated": "2026-03-21T12:52:18.906Z"
+        "lastUpdated": "2026-03-25T10:03:20.168Z"
       },
-      "lastFile": "/Users/minsoopark/Downloads/바이브코딩/insta-analyzer/src/components/ReportCard.tsx"
+      "lastFile": "/Users/minsoopark/Downloads/바이브코딩/insta-analyzer/src/components/AgentFlow.tsx"
     },
     "store": {
       "phase": "do",
@@ -49,7 +58,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-18T13:18:35.390Z",
-        "lastUpdated": "2026-03-20T15:23:07.217Z"
+        "lastUpdated": "2026-03-25T14:13:22.986Z"
       },
       "lastFile": "/Users/minsoopark/Downloads/바이브코딩/insta-analyzer/src/store/useAnalysisStore.ts"
     },
@@ -75,7 +84,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-19T06:56:08.681Z",
-        "lastUpdated": "2026-03-20T10:15:22.643Z"
+        "lastUpdated": "2026-03-24T06:26:29.669Z"
       },
       "lastFile": "/Users/minsoopark/Downloads/바이브코딩/insta-analyzer/src/app/history/page.tsx"
     },
@@ -88,7 +97,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-19T07:01:52.695Z",
-        "lastUpdated": "2026-03-21T12:34:43.167Z"
+        "lastUpdated": "2026-03-25T14:05:18.318Z"
       },
       "lastFile": "/Users/minsoopark/Downloads/바이브코딩/insta-analyzer/src/lib/scraper/instagram.ts"
     },
@@ -114,7 +123,7 @@
       "documents": {},
       "timestamps": {
         "started": "2026-03-20T09:32:50.299Z",
-        "lastUpdated": "2026-03-20T18:17:23.952Z"
+        "lastUpdated": "2026-03-25T14:02:33.870Z"
       },
       "lastFile": "/Users/minsoopark/Downloads/바이브코딩/insta-analyzer/src/app/api/analyze/route.ts"
     },
@@ -130,6 +139,123 @@
         "lastUpdated": "2026-03-20T16:59:13.869Z"
       },
       "lastFile": "/Users/minsoopark/Downloads/바이브코딩/insta-analyzer/scripts/debug-network.ts"
+    },
+    "test": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-22T16:11:18.342Z",
+        "lastUpdated": "2026-03-22T16:37:59.389Z"
+      },
+      "lastFile": "/Users/minsoopark/Downloads/바이브코딩/test/components/SearchBar.jsx"
+    },
+    "meta-synthesize": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-24T12:53:48.922Z",
+        "lastUpdated": "2026-03-24T12:53:48.922Z"
+      },
+      "lastFile": "/Users/minsoopark/Downloads/바이브코딩/insta-analyzer/src/app/api/agent/meta-synthesize/route.ts"
+    },
+    "verify-accounts": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-25T06:46:50.165Z",
+        "lastUpdated": "2026-03-25T14:11:32.472Z"
+      },
+      "lastFile": "/Users/minsoopark/Downloads/바이브코딩/insta-analyzer/src/app/api/agent/verify-accounts/route.ts"
+    },
+    "song-awareness-checker": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-30T14:20:31.042Z",
+        "lastUpdated": "2026-03-30T15:09:43.143Z"
+      },
+      "lastFile": "/Users/minsoopark/Downloads/바이브코딩/song-awareness-checker/app/page.tsx"
+    },
+    "spotify": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-30T14:21:24.644Z",
+        "lastUpdated": "2026-03-30T14:21:24.644Z"
+      },
+      "lastFile": "/Users/minsoopark/Downloads/바이브코딩/song-awareness-checker/app/api/spotify/route.ts"
+    },
+    "trends": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-30T14:21:35.841Z",
+        "lastUpdated": "2026-03-30T14:27:44.918Z"
+      },
+      "lastFile": "/Users/minsoopark/Downloads/바이브코딩/song-awareness-checker/app/api/trends/route.ts"
+    },
+    "lastfm": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-30T14:21:44.936Z",
+        "lastUpdated": "2026-03-30T14:21:44.936Z"
+      },
+      "lastFile": "/Users/minsoopark/Downloads/바이브코딩/song-awareness-checker/app/api/lastfm/route.ts"
+    },
+    "score": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-03-30T14:21:58.775Z",
+        "lastUpdated": "2026-03-30T14:43:52.335Z"
+      },
+      "lastFile": "/Users/minsoopark/Downloads/바이브코딩/song-awareness-checker/app/api/score/route.ts"
+    },
+    "render": {
+      "phase": "do",
+      "phaseNumber": 3,
+      "matchRate": null,
+      "iterationCount": 0,
+      "requirements": [],
+      "documents": {},
+      "timestamps": {
+        "started": "2026-04-04T03:28:28.398Z",
+        "lastUpdated": "2026-04-04T03:30:02.910Z"
+      },
+      "lastFile": "/Users/minsoopark/Downloads/바이브코딩/k-black-music-magazine-app/lib/render/slides.ts"
     }
   },
   "pipeline": {
@@ -140,7 +266,7 @@
   "session": {
     "startedAt": "2026-02-10T05:59:19.051Z",
     "onboardingCompleted": false,
-    "lastActivity": "2026-03-21T12:52:18.906Z"
+    "lastActivity": "2026-04-04T03:30:02.910Z"
   },
   "history": [
     {
@@ -1328,6 +1454,1590 @@
     {
       "timestamp": "2026-03-21T12:52:18.906Z",
       "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-22T06:28:33.062Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-22T06:28:56.160Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-22T06:29:02.728Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-22T07:24:31.445Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-22T07:24:57.283Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-22T07:28:48.065Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-22T07:29:11.814Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-22T07:36:00.213Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-22T07:36:08.636Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-22T07:37:16.531Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-22T07:37:36.016Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-22T08:50:24.164Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-22T08:50:30.732Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-22T08:50:49.829Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-22T09:10:00.151Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-22T09:10:07.320Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-22T09:10:23.024Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-22T16:11:18.342Z",
+      "feature": "test",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-22T16:11:20.810Z",
+      "feature": "test",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-22T16:17:46.229Z",
+      "feature": "test",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-22T16:17:51.338Z",
+      "feature": "test",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-22T16:37:45.641Z",
+      "feature": "test",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-22T16:37:59.389Z",
+      "feature": "test",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T09:36:38.013Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T09:40:25.535Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T09:50:10.061Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T10:21:25.335Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T10:21:40.141Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T11:04:41.510Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T11:11:43.034Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T11:31:58.313Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T11:46:32.387Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T11:48:56.420Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T11:50:30.245Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T12:15:05.346Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T12:27:33.063Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T12:27:37.820Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T12:27:48.352Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T12:28:00.188Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T12:28:12.328Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T14:47:14.671Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T14:47:28.683Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T14:47:33.285Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T14:47:41.213Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T14:47:56.913Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T14:48:07.770Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T14:48:14.801Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T14:48:27.302Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T14:48:33.373Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T14:48:40.682Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T14:52:14.744Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T14:52:19.113Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T14:52:25.350Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T14:52:29.581Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T14:52:33.704Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T14:52:39.039Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T14:52:45.449Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T14:52:59.194Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T14:56:18.972Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T14:56:27.578Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T14:56:32.347Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T14:59:05.245Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T14:59:12.054Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T14:59:17.660Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T14:59:23.798Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T14:59:33.516Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T15:00:04.103Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T15:00:14.864Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T15:00:19.303Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T15:00:24.955Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T15:00:29.496Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T15:01:43.299Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T15:01:50.214Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T15:01:54.709Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T15:02:03.393Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T15:02:52.284Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T15:02:57.091Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T15:03:01.809Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T15:03:05.832Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T15:06:06.100Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T15:06:11.754Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T15:06:15.041Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T15:07:35.995Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T15:09:09.298Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T15:09:24.600Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T15:09:29.740Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T15:10:22.788Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T15:11:52.756Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T15:15:38.794Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T15:15:55.556Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T15:16:00.948Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T15:16:08.611Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T15:16:12.537Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T15:16:20.967Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T15:16:34.224Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T15:16:41.955Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T15:16:46.956Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T15:16:52.105Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T15:19:07.378Z",
+      "feature": "scraper",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T15:19:14.193Z",
+      "feature": "scraper",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T15:19:24.121Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T15:19:28.082Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T15:21:45.821Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T15:21:51.690Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-23T15:22:02.252Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T06:24:13.235Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T06:24:18.686Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T06:24:27.812Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T06:24:32.982Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T06:24:40.155Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T06:25:02.150Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T06:25:06.657Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T06:25:11.876Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T06:25:15.403Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T06:25:19.858Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T06:26:05.491Z",
+      "feature": "scraper",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T06:26:14.830Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T06:26:18.786Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T06:26:29.670Z",
+      "feature": "history",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T06:30:49.107Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T06:32:01.413Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T06:32:04.867Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T06:32:30.037Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T06:32:33.224Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T06:35:00.365Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T06:36:34.283Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T06:38:10.996Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T06:41:50.543Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T06:42:33.848Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T06:44:09.454Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T06:44:24.194Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T06:45:41.684Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T06:45:48.698Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T07:23:30.705Z",
+      "feature": "store",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T07:23:34.471Z",
+      "feature": "store",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T07:26:55.416Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T07:27:06.317Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T07:27:13.352Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T07:27:29.642Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T07:27:35.401Z",
+      "feature": "store",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T08:01:20.570Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T08:01:29.389Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T08:01:52.531Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T08:02:07.905Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T08:02:17.061Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T08:02:50.109Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T08:03:08.698Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T08:03:41.787Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T08:03:59.894Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T08:04:05.764Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T08:04:34.641Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T08:28:30.122Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T08:56:08.911Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T09:12:33.265Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T09:12:36.323Z",
+      "feature": "scraper",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T09:12:41.551Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T09:20:09.938Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T09:20:15.076Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T09:20:21.537Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T09:20:26.465Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T09:20:33.661Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T09:20:45.513Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T09:23:20.228Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T09:27:50.437Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T09:27:53.503Z",
+      "feature": "scraper",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T09:28:09.274Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T09:28:16.336Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T09:28:22.025Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T09:28:37.060Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T09:28:40.945Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T09:30:50.905Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T12:24:29.059Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T12:24:37.606Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T12:32:10.434Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T12:32:15.425Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T12:33:12.917Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T12:53:01.588Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T12:53:08.140Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T12:53:16.495Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T12:53:28.946Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T12:53:39.244Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T12:53:48.922Z",
+      "feature": "meta-synthesize",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T12:54:07.383Z",
+      "feature": "store",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T12:54:12.555Z",
+      "feature": "store",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T12:54:16.456Z",
+      "feature": "store",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T12:54:19.953Z",
+      "feature": "store",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T12:54:39.867Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T12:54:54.441Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T12:54:58.740Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T12:55:21.410Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T12:55:50.999Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T12:56:07.047Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T12:56:23.518Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-24T14:14:14.091Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T06:34:20.954Z",
+      "feature": "scraper",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T06:46:50.165Z",
+      "feature": "verify-accounts",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T06:46:54.430Z",
+      "feature": "store",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T06:47:05.683Z",
+      "feature": "store",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T06:47:11.896Z",
+      "feature": "store",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T06:47:16.054Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T06:47:22.178Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T08:07:49.761Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T08:08:02.070Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T08:08:19.338Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T09:33:50.021Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T09:34:34.753Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T09:35:42.531Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T09:38:14.118Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T09:42:44.459Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T09:43:02.335Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T09:44:56.127Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T09:46:37.056Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T09:46:49.529Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T09:49:50.133Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T09:51:28.492Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T09:53:27.196Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T09:57:24.624Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T10:01:32.206Z",
+      "feature": "store",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T10:01:50.107Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T10:01:55.541Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T10:03:11.737Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T10:03:20.169Z",
+      "feature": "insta-analyzer",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T12:11:44.242Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T13:27:44.225Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T13:27:59.614Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T13:40:46.096Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T13:42:21.096Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T13:43:03.668Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T13:43:28.064Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T13:44:39.433Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T13:45:29.648Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T13:45:38.674Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T13:54:24.201Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T13:54:43.221Z",
+      "feature": "ai",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T14:02:14.703Z",
+      "feature": "verify-accounts",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T14:02:28.567Z",
+      "feature": "verify-accounts",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T14:02:33.870Z",
+      "feature": "analyze",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T14:02:48.575Z",
+      "feature": "store",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T14:02:55.759Z",
+      "feature": "scraper",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T14:05:18.319Z",
+      "feature": "scraper",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T14:11:26.076Z",
+      "feature": "verify-accounts",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T14:11:32.472Z",
+      "feature": "verify-accounts",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T14:13:19.569Z",
+      "feature": "store",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-25T14:13:22.986Z",
+      "feature": "store",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T14:20:31.042Z",
+      "feature": "song-awareness-checker",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T14:20:37.428Z",
+      "feature": "song-awareness-checker",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T14:20:49.440Z",
+      "feature": "song-awareness-checker",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T14:21:08.914Z",
+      "feature": "song-awareness-checker",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T14:21:24.644Z",
+      "feature": "spotify",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T14:21:35.841Z",
+      "feature": "trends",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T14:21:44.936Z",
+      "feature": "lastfm",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T14:21:58.775Z",
+      "feature": "score",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T14:22:47.996Z",
+      "feature": "song-awareness-checker",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T14:27:34.113Z",
+      "feature": "trends",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T14:27:39.884Z",
+      "feature": "trends",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T14:27:44.918Z",
+      "feature": "trends",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T14:42:40.831Z",
+      "feature": "song-awareness-checker",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T14:43:52.335Z",
+      "feature": "score",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T14:44:38.041Z",
+      "feature": "song-awareness-checker",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T14:49:25.494Z",
+      "feature": "song-awareness-checker",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T14:51:24.269Z",
+      "feature": "song-awareness-checker",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-03-30T15:09:43.143Z",
+      "feature": "song-awareness-checker",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-04T03:28:28.398Z",
+      "feature": "render",
+      "phase": "do",
+      "action": "updated"
+    },
+    {
+      "timestamp": "2026-04-04T03:30:02.910Z",
+      "feature": "render",
       "phase": "do",
       "action": "updated"
     }

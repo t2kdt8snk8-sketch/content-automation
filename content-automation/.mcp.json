@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "repowise": {
+      "command": "repowise",
+      "args": [
+        "mcp",
+        "/Users/minsoopark/Downloads/\ubc14\uc774\ube0c\ucf54\ub529/content-automation",
+        "--transport",
+        "stdio"
+      ],
+      "description": "repowise: codebase intelligence \u2014 docs, graph, git signals, dead code, decisions"
+    }
+  }
+}

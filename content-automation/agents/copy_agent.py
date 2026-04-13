@@ -5,14 +5,7 @@ from typing import Any
 
 from core.llm_client import call_sonnet
 from core.models import AgentName, AgentResult, TaskRequest
-
-_SYSTEM = (
-    "You are an expert social media copywriter specializing in K-culture, music, and lifestyle brands. "
-    "You write engaging content that resonates with Gen Z and millennial audiences. "
-    "When writing in Korean, use natural, conversational language with energy and personality. "
-    "When writing in English, keep it punchy and culturally aware. "
-    "For 'both', write the Korean version first, then the English version."
-)
+from prompts import load_prompt
 
 
 async def run(request: TaskRequest, tool_input: dict[str, Any]) -> AgentResult:
@@ -34,7 +27,7 @@ async def run(request: TaskRequest, tool_input: dict[str, Any]) -> AgentResult:
 
     try:
         content = await call_sonnet(
-            system=_SYSTEM,
+            system=load_prompt("copy_agent"),
             messages=[{"role": "user", "content": "\n".join(prompt_parts)}],
         )
     except Exception as e:
