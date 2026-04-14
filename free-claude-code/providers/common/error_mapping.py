@@ -1,3 +1,4 @@
+from __future__ import annotations
 """Error mapping for OpenAI-compatible providers (NIM, OpenRouter, LM Studio)."""
 
 import httpx

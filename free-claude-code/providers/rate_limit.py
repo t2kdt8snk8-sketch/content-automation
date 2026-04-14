@@ -1,3 +1,4 @@
+from __future__ import annotations
 """Global rate limiter for API requests."""
 
 import asyncio

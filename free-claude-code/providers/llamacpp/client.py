@@ -1,3 +1,4 @@
+from __future__ import annotations
 """Llama.cpp provider implementation."""
 
 import json
