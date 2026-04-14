@@ -29,9 +29,9 @@ class GlobalRateLimiter:
     Concurrency limit - caps simultaneously open streams.
     """
 
-    _instance: ClassVar[GlobalRateLimiter | None] = None
+    _instance: ClassVar["GlobalRateLimiter | None"] = None
 
-    def __new__(cls, *args: Any, **kwargs: Any) -> GlobalRateLimiter:
+    def __new__(cls, *args: Any, **kwargs: Any) -> "GlobalRateLimiter":
         if cls._instance is not None:
             return cls._instance
         instance = super().__new__(cls)
@@ -73,7 +73,7 @@ class GlobalRateLimiter:
         rate_limit: int | None = None,
         rate_window: float | None = None,
         max_concurrency: int = 5,
-    ) -> GlobalRateLimiter:
+    ) -> "GlobalRateLimiter":
         """Get or create the singleton instance.
 
         Args:
