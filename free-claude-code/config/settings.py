@@ -1,3 +1,4 @@
+from __future__ import annotations
 """Centralized configuration using Pydantic Settings."""
 
 import os
@@ -123,7 +124,7 @@ class Settings(BaseSettings):
 
     # ==================== Server ====================
     host: str = "0.0.0.0"
-    port: int = 8082
+    port: int = Field(default=8082, validation_alias="PORT")
     log_file: str = "server.log"
     # Optional server API key to protect endpoints (Anthropic-style)
     # Set via env `ANTHROPIC_AUTH_TOKEN`. When empty, no auth is required.
