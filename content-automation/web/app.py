@@ -525,20 +525,28 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
                             await append_message(_cid, "user", _msg)
                             if run.final_output:
                                 await append_message(_cid, "assistant", run.final_output)
-                            await _send(
-                                websocket,
-                                {
-                                    "type": "content_completed",
-                                    "final_output": run.final_output,
-                                    "total_ms": round(
-                                        ((run.completed_at - run.started_at).total_seconds() * 1000)
-                                    ) if run.completed_at and run.started_at else None,
-                                },
-                            )
+                            if run.status == "failed" and not run.final_output:
+                                await _send(websocket, {
+                                    "type": "workflow_failed",
+                                    "error": run.error or "알 수 없는 오류",
+                                })
+                            else:
+                                await _send(
+                                    websocket,
+                                    {
+                                        "type": "content_completed",
+                                        "final_output": run.final_output,
+                                        "total_ms": round(
+                                            ((run.completed_at - run.started_at).total_seconds() * 1000)
+                                        ) if run.completed_at and run.started_at else None,
+                                    },
+                                )
 
                     except Exception as e:
-                        logger.error(f"Workflow error: {e}", exc_info=True)
-                        await _send(websocket, {"type": "workflow_failed", "error": str(e)})
+                        from core.orchestrator import _fmt_error
+                        err_msg = _fmt_error(e)
+                        logger.error(f"Workflow error: {err_msg}", exc_info=True)
+                        await _send(websocket, {"type": "workflow_failed", "error": err_msg})
 
                 workflow_task = asyncio.create_task(run_and_save())
 

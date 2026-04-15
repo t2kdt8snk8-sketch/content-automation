@@ -20,6 +20,18 @@ MAX_ITERATIONS = 10
 _MARKETING_CONTEXT_PATH = Path(".agents/marketing-context.md")
 
 
+def _fmt_error(e: BaseException) -> str:
+    """에러 타입 + 메시지 + 원인 체인을 한 줄씩 반환."""
+    parts: list[str] = []
+    cur: BaseException | None = e
+    while cur is not None:
+        parts.append(f"{type(cur).__name__}: {cur}")
+        cur = cur.__cause__ or (cur.__context__ if not cur.__suppress_context__ else None)
+        if cur in (e,):  # 순환 방지
+            break
+    return "\n  caused by ".join(parts)
+
+
 def _load_marketing_context() -> str:
     """`.agents/marketing-context.md`가 있으면 읽어서 반환. 없으면 빈 문자열."""
     try:
@@ -103,8 +115,10 @@ async def run_workflow(
                 tools=TOOL_DEFINITIONS,
             )
         except Exception as e:
-            logger.error(f"[{request.task_id}] Opus call failed: {e}")
-            await _safe_emit(on_event, {"type": "workflow_failed", "error": str(e)})
+            err_msg = _fmt_error(e)
+            logger.error(f"[{request.task_id}] Opus call failed: {err_msg}")
+            run.error = err_msg
+            await _safe_emit(on_event, {"type": "workflow_failed", "error": err_msg})
             run.status = "failed"
             run.completed_at = datetime.utcnow()
             return run
