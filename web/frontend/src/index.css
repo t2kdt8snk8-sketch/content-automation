@@ -1,0 +1,57 @@
+@import 'tailwindcss';
+
+@font-face {
+  font-family: 'FS Pixel Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/FSPixelSansUnicode-Regular.ttf') format('truetype');
+}
+
+:root {
+  --color-bg: #1e1e2e;
+  --color-bg-dark: #181828;
+  --color-border: #4a4a6a;
+  --color-accent: #6030ff;
+  --color-accent-bright: #746fff;
+  --color-text: rgba(255, 255, 255, 0.9);
+  --color-text-muted: rgba(255, 255, 255, 0.5);
+  --color-btn-bg: rgb(53, 52, 69);
+  --color-btn-hover: rgb(78, 75, 104);
+  --color-status-active: #3794ff;
+  --color-status-success: #89d185;
+  --color-status-error: #d14249;
+  --shadow-pixel: 2px 2px 0px #0a0a14;
+}
+
+@theme inline {
+  --spacing: 1px;
+  --font-pixel: 'FS Pixel Sans', monospace;
+  --text-2xs: 16px;
+  --text-xs: 18px;
+  --text-sm: 20px;
+  --text-base: 22px;
+  --text-lg: 26px;
+  --color-bg: var(--color-bg);
+  --color-bg-dark: var(--color-bg-dark);
+  --color-border: var(--color-border);
+  --color-accent: var(--color-accent);
+  --color-text: var(--color-text);
+  --color-text-muted: var(--color-text-muted);
+  --color-btn-bg: var(--color-btn-bg);
+  --color-btn-hover: var(--color-btn-hover);
+  --color-status-active: var(--color-status-active);
+  --color-status-success: var(--color-status-success);
+  --color-status-error: var(--color-status-error);
+  --shadow-pixel: var(--shadow-pixel);
+}
+
+@layer base {
+  html, body, #root {
+    @apply m-0 w-full h-full overflow-hidden;
+    font-family: 'FS Pixel Sans', monospace;
+    font-size: 22px;
+    color: var(--color-text);
+    background: var(--color-bg-dark);
+  }
+}

@@ -1,52 +1,10 @@
-.vercel
-.vercel_build_output
-node_modules
-.DS_Store
-demo_deploy
-*.log
-
-# Environment & Config
 .env
-.env.local
-.env.*.local
-
-# Dependencies
-.venv
-venv/
-env/
-ENV/
+outputs/
+logs/
+__pycache__/
+*.pyc
+*.pyo
 .venv/
+.uv/
 *.egg-info/
 dist/
-build/
-
-# IDE & System
-.vscode/settings.json
-.idea/
-*.swp
-*.swo
-*~
-.DS_Store
-
-# Submodules & Embedded repos (managed separately)
-claude-skills/
-free-claude-code/
-insta-analyzer/
-
-# Build outputs
-dist/
-build/
-*.pyc
-__pycache__/
-.pytest_cache/
-
-# Node
-node_modules/
-.next/
-out/
-
-# Temporary files
-*.zip
-*.tmp
-.bkit/
-.pdca-snapshots/
