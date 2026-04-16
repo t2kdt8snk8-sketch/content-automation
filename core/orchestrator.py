@@ -14,10 +14,23 @@ from loguru import logger
 from agents.registry import TOOL_DEFINITIONS, get_agent_callable
 from core.llm_client import call_opus, call_opus_with_tools
 from core.models import AgentResult, ConversationState, TaskRequest, WorkflowRun
+from storage.feedback_store import format_for_prompt, save_feedback
 
 MAX_ITERATIONS = 10
 
 _MARKETING_CONTEXT_PATH = Path(".agents/marketing-context.md")
+
+
+def _fmt_error(e: BaseException) -> str:
+    """에러 타입 + 메시지 + 원인 체인을 한 줄씩 반환."""
+    parts: list[str] = []
+    cur: BaseException | None = e
+    while cur is not None:
+        parts.append(f"{type(cur).__name__}: {cur}")
+        cur = cur.__cause__ or (cur.__context__ if not cur.__suppress_context__ else None)
+        if cur in (e,):  # 순환 방지
+            break
+    return "\n  caused by ".join(parts)
 
 
 def _load_marketing_context() -> str:
@@ -37,27 +50,33 @@ def _load_marketing_context() -> str:
 
 
 _ORCHESTRATOR_SYSTEM = """\
-You are a content automation orchestrator. Given a user's content request, use the \
-available tools (agents) to fulfill it. Each tool represents a specialized agent.
+당신은 콘텐츠 마케팅 에이전시의 PM(Project Manager)입니다. \
+CD(Creative Director, 사용자)의 지시를 받아 작업 계획을 세우고, \
+각 담당(에이전트)에게 일을 배분한 뒤 결과를 CD에게 보고합니다.
 
-Available agents:
-- research_agent: web search and trend analysis — use first when fresh data is needed
-- copy_agent: Korean/English copywriting and captions — use for any written content
-- image_prompt_agent: Midjourney/Flux image prompts — use when visuals are needed
-- script_agent: video/podcast script writing — use when video is the deliverable
-- format_agent: formats final output as clean markdown — ALWAYS call this last
+## 사용 가능한 담당
 
-Strategy:
-1. Analyze the request and decide which agents are needed (skip what isn't relevant)
-2. Call agents in logical order: research → content creation → format
-3. When calling later agents, pass relevant outputs from earlier agents in the 'context' field
-4. Always call format_agent as your final step to produce a polished result
-5. Once format_agent is done, respond with a brief summary of what was created
+- research_agent: 웹 검색·트렌드 분석 담당 — 최신 데이터가 필요할 때 가장 먼저 투입
+- copy_agent: 한국어/영어 카피라이팅 담당 — 텍스트 콘텐츠 제작 전담
+- image_prompt_agent: Midjourney/Flux 이미지 프롬프트 담당 — 비주얼이 필요할 때
+- script_agent: 영상·팟캐스트 스크립트 담당 — 영상 콘텐츠 의뢰 시
+- format_agent: 최종 결과물 마크다운 정리 담당 — 항상 마지막에 호출
 
-The user may inject feedback between agent steps. Incorporate any feedback into your \
-next decisions and pass it in the context field to the relevant agents.
+## 작업 전략
 
-Be efficient: a caption-only request doesn't need image prompts or a script.\
+1. 요청을 분석해 필요한 담당만 선택한다 (불필요한 담당은 제외)
+2. 논리적 순서로 배분한다: 리서치 → 콘텐츠 제작 → 포맷
+3. 이후 담당을 호출할 때는 앞선 담당의 결과물을 context로 전달한다
+4. 마지막은 반드시 format_agent로 마무리한다
+
+## CD 보고 원칙 (가장 중요)
+
+당신은 CD의 직속 PM입니다. CD는 절대적 의사결정권자이며, 모든 판단의 최종 권한은 CD에게 있습니다.
+
+- **중단점마다 현황을 보고한다.** 계획을 세울 때, 각 담당 완료 후, 최종 결과 전달 시 — 항상 CD에게 무슨 일이 일어나고 있는지 알린다.
+- **선택지를 제시한다.** 방향이 불확실하거나 데이터가 약할 때 혼자 결정하지 않는다. "이대로 진행할까요, 아니면 방향을 바꿀까요?"라고 묻는다.
+- **피드백을 즉시 반영한다.** CD가 피드백을 남기면 다음 담당에게 context로 전달하고, 필요하면 계획을 수정한다.
+- **투명하게 보고한다.** 담당이 실패하거나 결과가 기대에 못 미쳐도 그대로 보고한다. 숨기거나 억지로 채우지 않는다.\
 """
 
 
@@ -76,7 +95,10 @@ async def run_workflow(
             "message": "..."}. When None (Telegram bot), runs fully automatically.
     """
     marketing_ctx = _load_marketing_context()
+    feedback_ctx = await format_for_prompt(request.card_id)
     system = _ORCHESTRATOR_SYSTEM + marketing_ctx
+    if feedback_ctx:
+        system += f"\n\n{feedback_ctx}"
 
     workflow_start = time.monotonic()
     run = WorkflowRun(
@@ -103,8 +125,10 @@ async def run_workflow(
                 tools=TOOL_DEFINITIONS,
             )
         except Exception as e:
-            logger.error(f"[{request.task_id}] Opus call failed: {e}")
-            await _safe_emit(on_event, {"type": "workflow_failed", "error": str(e)})
+            err_msg = _fmt_error(e)
+            logger.error(f"[{request.task_id}] Opus call failed: {err_msg}")
+            run.error = err_msg
+            await _safe_emit(on_event, {"type": "workflow_failed", "error": err_msg})
             run.status = "failed"
             run.completed_at = datetime.utcnow()
             return run
@@ -134,7 +158,11 @@ async def run_workflow(
             b.name for b in response.content
             if isinstance(b, anthropic.types.ToolUseBlock)
         ]
-        await _safe_emit(on_event, {"type": "plan_step", "agents": planned})
+        await _safe_emit(on_event, {
+            "type": "plan_step",
+            "agents": planned,
+            "cd_message": f"PM 계획: {' → '.join(planned)} 순서로 진행하겠습니다. 방향을 바꾸려면 피드백을 남겨주세요.",
+        })
 
         if approval_queue is not None:
             user_action = await approval_queue.get()
@@ -191,6 +219,7 @@ async def run_workflow(
                     "content": result.content if result.success else None,
                     "error": result.error if not result.success else None,
                     "elapsed_ms": round(elapsed),
+                    "cd_message": f"{agent_name} 완료. 결과를 확인하고 계속할지 방향을 바꿀지 알려주세요.",
                 })
 
                 if approval_queue is not None:
@@ -202,6 +231,7 @@ async def run_workflow(
                             f"[{request.task_id}] Agent feedback ({agent_name}): "
                             f"{feedback_msg[:60]}"
                         )
+                        await save_feedback(request.card_id, agent_name, feedback_msg)
                     # approve 또는 feedback 모두 다음 에이전트로 진행
 
                 tool_results.append({
