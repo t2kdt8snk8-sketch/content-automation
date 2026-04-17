@@ -4,10 +4,11 @@ import { ChatPanel } from './components/ChatPanel.js';
 import { FeedPanel } from './components/FeedPanel.js';
 import { LoginScreen } from './components/LoginScreen.js';
 import { OfficeCanvas } from './components/OfficeCanvas.js';
+import { ProductionPanel } from './components/ProductionPanel.js';
 import { useWebSocket } from './hooks/useWebSocket.js';
 import type { WsEvent } from './hooks/useWebSocket.js';
 
-type Tab = 'chat' | 'feed';
+type Tab = 'chat' | 'feed' | 'production';
 
 function App() {
   const [token, setToken] = useState<string | null>(null);
@@ -140,7 +141,7 @@ function App() {
               flexShrink: 0,
             }}
           >
-            {(['chat', 'feed'] as Tab[]).map((tab) => (
+            {(['chat', 'feed', 'production'] as Tab[]).map((tab) => (
               <button
                 key={tab}
                 onClick={() => handleTabChange(tab)}
@@ -158,7 +159,7 @@ function App() {
                   gap: 6,
                 }}
               >
-                {tab === 'chat' ? '채팅' : '피드'}
+                {tab === 'chat' ? '채팅' : tab === 'feed' ? '피드' : '제작'}
                 {tab === 'feed' && newCardCount > 0 && activeTab !== 'feed' && (
                   <span
                     style={{
@@ -192,8 +193,10 @@ function App() {
                 onFeedback={handleFeedback}
                 onCancel={handleCancel}
               />
-            ) : (
+            ) : activeTab === 'feed' ? (
               <FeedPanel lastEvent={lastEvent ?? events} />
+            ) : (
+              <ProductionPanel />
             )}
           </div>
         </div>

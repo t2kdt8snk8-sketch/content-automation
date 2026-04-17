@@ -23,6 +23,7 @@ from storage.output_store import list_results, save_result
 from storage.research_store import (
     delete_all_research_results,
     delete_research_result,
+    get_research_result,
     list_research_results,
     save_research_result,
 )
@@ -169,6 +170,17 @@ async def research_archive(request: Request) -> JSONResponse:
     if not verify_token(token):
         return JSONResponse({"error": "Unauthorized"}, status_code=401)
     return JSONResponse({"items": await list_research_results()})
+
+
+@app.get("/api/research/archive/{file_id}")
+async def research_archive_detail(file_id: str, request: Request) -> JSONResponse:
+    token = _extract_token(request)
+    if not verify_token(token):
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+    result = await get_research_result(file_id)
+    if result is None:
+        return JSONResponse({"error": "Not found"}, status_code=404)
+    return JSONResponse(result)
 
 
 @app.delete("/api/research/archive")
@@ -525,20 +537,28 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
                             await append_message(_cid, "user", _msg)
                             if run.final_output:
                                 await append_message(_cid, "assistant", run.final_output)
-                            await _send(
-                                websocket,
-                                {
-                                    "type": "content_completed",
-                                    "final_output": run.final_output,
-                                    "total_ms": round(
-                                        ((run.completed_at - run.started_at).total_seconds() * 1000)
-                                    ) if run.completed_at and run.started_at else None,
-                                },
-                            )
+                            if run.status == "failed" and not run.final_output:
+                                await _send(websocket, {
+                                    "type": "workflow_failed",
+                                    "error": run.error or "알 수 없는 오류",
+                                })
+                            else:
+                                await _send(
+                                    websocket,
+                                    {
+                                        "type": "content_completed",
+                                        "final_output": run.final_output,
+                                        "total_ms": round(
+                                            ((run.completed_at - run.started_at).total_seconds() * 1000)
+                                        ) if run.completed_at and run.started_at else None,
+                                    },
+                                )
 
                     except Exception as e:
-                        logger.error(f"Workflow error: {e}", exc_info=True)
-                        await _send(websocket, {"type": "workflow_failed", "error": str(e)})
+                        from core.orchestrator import _fmt_error
+                        err_msg = _fmt_error(e)
+                        logger.error(f"Workflow error: {err_msg}", exc_info=True)
+                        await _send(websocket, {"type": "workflow_failed", "error": err_msg})
 
                 workflow_task = asyncio.create_task(run_and_save())
 
@@ -569,6 +589,35 @@ class OpportunityStatusUpdate(BaseModel):
 
 class CardChatRequest(BaseModel):
     message: str
+
+
+class ManualCardRequest(BaseModel):
+    title: str
+    summary: str
+    recommended_formats: list[str] = []
+    suggested_angles: list[str] = []
+
+
+@app.post("/api/opportunities/manual")
+async def create_manual_opportunity(body: ManualCardRequest, request: Request) -> JSONResponse:
+    """사용자가 직접 기획한 콘텐츠 카드를 생성한다."""
+    token = _extract_token(request)
+    if not verify_token(token):
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    from core.models import OpportunityCard, OpportunityStatus
+    from storage.opportunity_store import save_card
+
+    card = OpportunityCard(
+        title=body.title.strip(),
+        summary=body.summary.strip(),
+        recommended_formats=body.recommended_formats,
+        suggested_angles=body.suggested_angles,
+        opportunity_score=100,
+        status=OpportunityStatus.APPROVED,
+    )
+    await save_card(card)
+    return JSONResponse(card.model_dump(mode="json"), status_code=201)
 
 
 @app.get("/api/opportunities")
@@ -652,6 +701,86 @@ async def opportunity_chat(
         "reply": reply,
         "conversation": [m.model_dump(mode="json") for m in (updated.conversation if updated else [])],
     })
+
+
+# ── Production API ────────────────────────────────────────────────────────────
+
+class ProductionChatRequest(BaseModel):
+    message: str
+    conversation: list[dict[str, str]] = []
+
+
+class ProductionProduceRequest(BaseModel):
+    format: str = ""
+    user_direction: str = ""
+    conversation: list[dict[str, str]] = []
+
+
+@app.post("/api/production/{card_id}/decide")
+async def production_decide(card_id: str, request: Request) -> JSONResponse:
+    """카드 분석 후 제작 포맷과 이미지 검색어 결정."""
+    token = _extract_token(request)
+    if not verify_token(token):
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    card = await get_card(card_id)
+    if card is None:
+        return JSONResponse({"error": "Not found"}, status_code=404)
+
+    from agents.production_agent import decide_format, search_images
+    decision = await decide_format(card)
+    images = await search_images(decision.get("image_queries", [card.title]))
+
+    return JSONResponse({"decision": decision, "images": images})
+
+
+@app.post("/api/production/{card_id}/produce")
+async def production_produce(
+    card_id: str, body: ProductionProduceRequest, request: Request
+) -> JSONResponse:
+    """실제 콘텐츠 제작."""
+    token = _extract_token(request)
+    if not verify_token(token):
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    card = await get_card(card_id)
+    if card is None:
+        return JSONResponse({"error": "Not found"}, status_code=404)
+
+    from agents.production_agent import decide_format, search_images, produce_content
+    # 포맷이 지정되지 않으면 자동 결정
+    if body.format:
+        fmt, outline, image_queries = body.format, [], [card.title]
+    else:
+        decision = await decide_format(card)
+        fmt = decision.get("format", "카피라이팅")
+        outline = decision.get("outline", [])
+        image_queries = decision.get("image_queries", [card.title])
+
+    images = await search_images(image_queries)
+    content = await produce_content(
+        card, fmt, outline, images, user_direction=body.user_direction
+    )
+
+    return JSONResponse({"content": content, "format": fmt, "images": images})
+
+
+@app.post("/api/production/{card_id}/chat")
+async def production_chat(
+    card_id: str, body: ProductionChatRequest, request: Request
+) -> JSONResponse:
+    """제작 과정 대화."""
+    token = _extract_token(request)
+    if not verify_token(token):
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    card = await get_card(card_id)
+    if card is None:
+        return JSONResponse({"error": "Not found"}, status_code=404)
+
+    from agents.production_agent import chat_about_production
+    reply = await chat_about_production(card, body.conversation, body.message)
+    return JSONResponse({"reply": reply})
 
 
 # ── SPA 진입점 ────────────────────────────────────────────────────────────────

@@ -5,6 +5,7 @@ from functools import lru_cache
 from typing import Any
 
 import anthropic
+import httpx
 
 from config.settings import get_settings
 
@@ -141,6 +142,54 @@ async def call_haiku(system: str, messages: list[dict[str, Any]]) -> str:
         messages=messages,
     )
     return _extract_text(response)
+
+
+async def call_gemini(
+    system: str,
+    messages: list[dict[str, Any]],
+    fast: bool = False,
+) -> str:
+    """Gemini API로 콘텐츠 제작. fast=True면 flash-lite 모델 사용."""
+    settings = get_settings()
+    if not settings.gemini_api_key:
+        raise RuntimeError("GEMINI_API_KEY가 설정되지 않았습니다.")
+
+    model = settings.model_production_fast if fast else settings.model_production
+    url = (
+        f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+        f"?key={settings.gemini_api_key}"
+    )
+
+    # Anthropic 형식 → Gemini 형식 변환
+    gemini_contents: list[dict[str, Any]] = []
+    if system:
+        gemini_contents.append({"role": "user", "parts": [{"text": f"[System]\n{system}"}]})
+        gemini_contents.append({"role": "model", "parts": [{"text": "네, 이해했습니다."}]})
+
+    for msg in messages:
+        role = "model" if msg.get("role") == "assistant" else "user"
+        content = msg.get("content", "")
+        if isinstance(content, str):
+            gemini_contents.append({"role": role, "parts": [{"text": content}]})
+        elif isinstance(content, list):
+            parts = [{"text": b.get("text", "")} for b in content if b.get("type") == "text"]
+            if parts:
+                gemini_contents.append({"role": role, "parts": parts})
+
+    payload = {
+        "contents": gemini_contents,
+        "generationConfig": {"maxOutputTokens": 8192, "temperature": 0.8},
+    }
+
+    async with httpx.AsyncClient(timeout=120.0) as client:
+        response = await client.post(url, json=payload)
+        response.raise_for_status()
+        data = response.json()
+
+    try:
+        return data["candidates"][0]["content"]["parts"][0]["text"]
+    except (KeyError, IndexError) as exc:
+        raise RuntimeError(f"Gemini 응답 파싱 실패: {data}") from exc
 
 
 async def call_opus_with_tools(
