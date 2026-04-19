@@ -68,13 +68,15 @@ export async function POST(request: NextRequest) {
     const webzineResults = webzineSettled.status === "fulfilled" ? webzineSettled.value : [];
     const hookTrackExternalContext = buildExternalContext(youtubeResults, webzineResults);
 
-    // 훅 곡 + 메인 곡 외부 자료 합산 → 4-B(개념 구현 분석)에만 활용
+    // 훅 곡 + 메인 곡 외부 자료 합산 → 4-B(사운드 개념 분석)에만 활용
+    // YouTube 쿼리가 "sound analysis production breakdown" 전용이라 4-A에는 부적합
     const conceptExternalContext = [mainTrackExternalContext, hookTrackExternalContext]
       .filter(Boolean)
       .join("\n\n") || undefined;
 
-    // 4-A: Flash 모델로 감상 원재료/TMI 수집
+    // 4-A: Pro 모델로 감상 원재료/TMI 수집 (Gemini google_search로 직접 탐색)
     const trackDetails = await researchTrackDetails({
+      workflowId,
       hookTrack: candidate.trackName,
       hookArtist: candidate.artistName,
       mainTrack: workflow.mainTrack,
