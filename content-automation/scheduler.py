@@ -88,23 +88,17 @@ async def run_research_once() -> None:
     if not categories:
         return
 
-    from core.models import ResearchItem, ResearchResult
+    from core.models import ResearchGoal, ResearchRequest
+    from research.orchestrator import run_research
 
     for category in categories:
         try:
-            bundle = await gather_research_data(f"{category} trend", focus="trends")
-            rendered = render_research_bundle(bundle)
-
             request = ResearchRequest(
                 chat_id="scheduler",
                 goal=ResearchGoal.DISCOVER,
                 query=f"{category} trend",
             )
-            result = ResearchResult(
-                request=request,
-                summary=rendered[:500],
-                raw_items=[],
-            )
+            result = await run_research(request)
             await save_research_result(result)
             logger.debug(f"research_loop: saved research for '{category}'")
         except asyncio.CancelledError:

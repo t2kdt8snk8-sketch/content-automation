@@ -15,6 +15,11 @@ class Settings(BaseSettings):
     model_sonnet: str = Field(default="claude-sonnet-4-6", alias="MODEL_SONNET")
     model_haiku: str = Field(default="claude-haiku-4-5-20251001", alias="MODEL_HAIKU")
 
+    # Gemini — 콘텐츠 제작 전용
+    gemini_api_key: str | None = Field(default=None, alias="GEMINI_API_KEY")
+    model_production: str = Field(default="gemini-3.1-pro-preview", alias="MODEL_PRODUCTION")
+    model_production_fast: str = Field(default="gemini-3.1-flash-lite-preview", alias="MODEL_PRODUCTION_FAST")
+
     # External research sources
     news_api_key: str | None = Field(default=None, alias="NEWS_API_KEY")
     youtube_data_api_key: str | None = Field(

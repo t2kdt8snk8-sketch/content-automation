@@ -22,6 +22,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
       });
       const data = (await res.json()) as { token?: string; error?: string };
       if (res.ok && data.token) {
+        sessionStorage.setItem('auth_token', data.token);
         onLogin(data.token);
       } else {
         setError(data.error ?? '로그인 실패');

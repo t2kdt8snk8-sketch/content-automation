@@ -26,6 +26,7 @@ async def run_research(
     raw_items.extend(normalize_items("newsapi", bundle.get("newsapi", {})))
     raw_items.extend(normalize_items("duckduckgo", bundle.get("duckduckgo", {})))
     raw_items.extend(normalize_items("pytrends", bundle.get("pytrends", {})))
+    raw_items.extend(normalize_items("reddit", bundle.get("reddit", {})))
 
     if on_progress:
         on_progress("트렌드 기회 정리 중")

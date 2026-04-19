@@ -68,32 +68,11 @@ export default function HomePage() {
   const [assets, setAssets] = useState<ExportedAsset[]>([]);
   const [exportError, setExportError] = useState<string | null>(null);
 
-  // 새로고침 후 복원
+  // 새로고침 시 이전 세션 초기화
   useEffect(() => {
-    const savedId = localStorage.getItem("kblack_workflow_id");
-    const savedCandidateId = localStorage.getItem("kblack_selected_candidate_id");
-    if (!savedId) return;
-
-    fetch(`/api/workflows?id=${savedId}`)
-      .then((r) => r.json())
-      .then((data: { workflow?: Workflow }) => {
-        if (!data.workflow) {
-          localStorage.removeItem("kblack_workflow_id");
-          localStorage.removeItem("kblack_selected_candidate_id");
-          return;
-        }
-        setWorkflow(data.workflow);
-        setStatus(data.workflow.status);
-        if (savedCandidateId) setSelectedCandidateId(savedCandidateId);
-        if (data.workflow.mainTrackExternalContext) {
-          setMainTrackExternalContext(data.workflow.mainTrackExternalContext);
-        }
-      })
-      .catch(() => {
-        localStorage.removeItem("kblack_workflow_id");
-        localStorage.removeItem("kblack_selected_candidate_id");
-        localStorage.removeItem("kblack_external_context");
-      });
+    localStorage.removeItem("kblack_workflow_id");
+    localStorage.removeItem("kblack_selected_candidate_id");
+    localStorage.removeItem("kblack_external_context");
   }, []);
 
   const isSubmitting = busyStage === "submitting";

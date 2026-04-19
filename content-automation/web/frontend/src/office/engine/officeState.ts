@@ -267,6 +267,7 @@ export class OfficeState {
     preferredSeatId?: string,
     skipSpawnEffect?: boolean,
     folderName?: string,
+    label?: string,
   ): void {
     if (this.characters.has(id)) return;
 
@@ -313,6 +314,9 @@ export class OfficeState {
 
     if (folderName) {
       ch.folderName = folderName;
+    }
+    if (label) {
+      ch.label = label;
     }
     if (!skipSpawnEffect) {
       ch.matrixEffect = 'spawn';
@@ -735,6 +739,24 @@ export class OfficeState {
 
   getCharacters(): Character[] {
     return Array.from(this.characters.values());
+  }
+
+  /** Get furniture base type at pixel position (for hit testing). Returns normalized type or null.
+   *  PC variants (PC_FRONT_OFF, PC_SIDE, etc.) → 'PC'
+   *  Other types returned as-is.
+   */
+  getFurnitureAt(worldX: number, worldY: number): string | null {
+    const col = Math.floor(worldX / TILE_SIZE);
+    const row = Math.floor(worldY / TILE_SIZE);
+    for (const item of this.layout.furniture) {
+      const entry = getCatalogEntry(item.type);
+      const fw = entry?.footprintW ?? 1;
+      const fh = entry?.footprintH ?? 1;
+      if (col >= item.col && col < item.col + fw && row >= item.row && row < item.row + fh) {
+        return item.type.startsWith('PC') ? 'PC' : item.type;
+      }
+    }
+    return null;
   }
 
   /** Get character at pixel position (for hit testing). Returns id or null. */

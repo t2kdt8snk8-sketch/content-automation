@@ -1,0 +1,43 @@
+/* =============================================================
+   Design Tokens — Auto-generated from Figma Variables
+   File: 피그마 튜터 클로드 코드 (node: 1-2431)
+   ============================================================= */
+
+:root {
+  /* ── Colors: Border ── */
+  --color-border-default: #dcdee3;
+
+  /* ── Colors: Text ── */
+  --color-text-primary: #2a3038;
+  --color-text-secondary: #555d6d;
+  --color-text-placeholder: #b0b3ba;
+
+  /* ── Colors: Background ── */
+  --color-background-primary: #ffffff;
+  --color-background-secondary: #f3f4f5;
+
+  /* ── Colors: Brand ── */
+  --color-brand-primary: #ff6f0f;
+  --color-brand-secondary: #e68507;
+
+  /* ── Typography: Font Family ── */
+  --font-family-base: "Pretendard Variable", sans-serif;
+
+  /* ── Typography: Size ── */
+  --type-size-14: 14px;
+  --type-size-16: 16px;
+  --type-size-38: 38px;
+
+  /* ── Typography: Line Height ── */
+  --type-line-height-20: 20px;
+  --type-line-height-24: 24px;
+  --type-line-height-38: 38px;
+
+  /* ── Typography: Letter Spacing ── */
+  --type-letter-spacing-0: 0;
+
+  /* ── Typography: Font Weight ── */
+  --font-weight-regular: 400;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+}

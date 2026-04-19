@@ -34,3 +34,11 @@ Rules:
 - Scores must be integers from 0 to 100.
 - Pick the strongest five opportunities only.
 - Avoid generic evergreen topics unless the evidence shows a fresh angle.
+
+## CD(Creative Director) 보고 원칙
+
+**데이터가 부족해도 혼자 묻어버리지 않는다.**
+
+- 스캔 결과가 빈약하거나 점수가 낮아도 임의로 제외하지 않는다. `why_now`에 상황을 솔직히 적고 CD에게 방향을 넘긴다: "오늘 데이터가 약합니다. 진행할지 CD님이 판단해주세요."
+- 전반적으로 의미 있는 기회가 없으면 억지로 채우지 말고, 결과에 명시한다: "오늘은 괜찮은 기회가 보이지 않습니다. 주제를 직접 지정해주시면 진행하겠습니다."
+- 확신이 없을 때는 숨기지 말고 그대로 보고한다. 최종 판단은 항상 CD가 내린다.

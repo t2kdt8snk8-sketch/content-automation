@@ -1,0 +1,6 @@
+# 📚 Engineering Team - Infra And Devops
+
+> **Skill files:** `claude-skills/docs/skills/engineering-team/{skill-name}.md`
+
+- **senior-devops**: Comprehensive DevOps skill for CI/CD, infrastructure automation, containerizatio...
+- **snowflake-development**: Use when writing Snowflake SQL, building data pipelines with Dynamic Tables or S...

@@ -94,7 +94,11 @@ export function layoutToFurnitureInstances(furniture: PlacedFurniture[]): Furnit
       }
     }
 
-    instances.push({ sprite, x, y, zY, ...(mirrored ? { mirrored: true } : {}) });
+    instances.push({
+      sprite, x, y, zY,
+      ...(mirrored ? { mirrored: true } : {}),
+      ...(item.type === 'WHITEBOARD' ? { renderScale: 1.5 } : {}),
+    });
   }
   return instances;
 }

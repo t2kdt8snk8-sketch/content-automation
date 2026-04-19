@@ -125,14 +125,25 @@ export function renderScene(
     const fx = offsetX + f.x * zoom;
     const fy = offsetY + f.y * zoom;
     if (f.mirrored) {
+      const dw = f.renderScale ? cached.width * f.renderScale : cached.width;
+      const dh = f.renderScale ? cached.height * f.renderScale : cached.height;
       drawables.push({
         zY: f.zY,
         draw: (c) => {
           c.save();
-          c.translate(fx + cached.width, fy);
+          c.translate(fx + dw, fy);
           c.scale(-1, 1);
-          c.drawImage(cached, 0, 0);
+          c.drawImage(cached, 0, 0, dw, dh);
           c.restore();
+        },
+      });
+    } else if (f.renderScale) {
+      const dw = cached.width * f.renderScale;
+      const dh = cached.height * f.renderScale;
+      drawables.push({
+        zY: f.zY,
+        draw: (c) => {
+          c.drawImage(cached, fx, fy, dw, dh);
         },
       });
     } else {
@@ -522,6 +533,41 @@ function renderBubbles(
   }
 }
 
+// ── Name tags ───────────────────────────────────────────────────
+
+function renderNameTags(
+  ctx: CanvasRenderingContext2D,
+  characters: Character[],
+  offsetX: number,
+  offsetY: number,
+  zoom: number,
+): void {
+  const fontSize = Math.max(8, Math.round(6 * zoom));
+  ctx.font = `${fontSize}px monospace`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'bottom';
+
+  for (const ch of characters) {
+    if (!ch.label) continue;
+    if (ch.matrixEffect) continue; // 스폰/디스폰 중에는 숨김
+
+    const sittingOffset = ch.state === CharacterState.TYPE ? CHARACTER_SITTING_OFFSET_PX : 0;
+    // 캐릭터 상단보다 약간 위에 표시 (캐릭터 스프라이트 높이≈24px 기준)
+    const tagX = Math.round(offsetX + ch.x * zoom);
+    const tagY = Math.round(offsetY + (ch.y + sittingOffset) * zoom - 22 * zoom - 2);
+
+    // 텍스트만 (배경 없음) — 얇은 외곽선으로 가독성 확보
+    ctx.save();
+    ctx.strokeStyle = 'rgba(0,0,0,0.8)';
+    ctx.lineWidth = 2;
+    ctx.lineJoin = 'round';
+    ctx.strokeText(ch.label, tagX, tagY);
+    ctx.fillStyle = 'rgba(200,220,255,0.95)';
+    ctx.fillText(ch.label, tagX, tagY);
+    ctx.restore();
+  }
+}
+
 export interface ButtonBounds {
   /** Center X in device pixels */
   cx: number;
@@ -624,6 +670,9 @@ export function renderFrame(
 
   // Speech bubbles (always on top of characters)
   renderBubbles(ctx, characters, offsetX, offsetY, zoom);
+
+  // Name tags (above speech bubbles)
+  renderNameTags(ctx, characters, offsetX, offsetY, zoom);
 
   // Editor overlays
   if (editor) {

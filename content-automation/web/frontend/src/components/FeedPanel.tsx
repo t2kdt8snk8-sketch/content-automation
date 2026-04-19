@@ -26,7 +26,9 @@ export function FeedPanel({ lastEvent }: FeedPanelProps) {
   useEffect(() => {
     void fetch('/api/opportunities', { credentials: 'include' })
       .then((r) => r.json())
-      .then((data: OpportunityCard[]) => setCards(data))
+      .then((data: unknown) => {
+        if (Array.isArray(data)) setCards(data as OpportunityCard[]);
+      })
       .catch(() => {/* 무시 */});
   }, []);
 

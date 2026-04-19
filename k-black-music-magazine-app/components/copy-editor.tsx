@@ -18,6 +18,26 @@ export function CopyEditor({ value, onChange }: CopyEditorProps) {
         </p>
       </div>
 
+      {value.narrativeFlow ? (
+        <div className="rounded-[28px] border border-white/10 bg-black/20 p-5 space-y-3">
+          <p className="text-sm font-semibold text-cream">서사 플로우</p>
+          <div className="space-y-2">
+            <div>
+              <p className="text-xs text-sand/60 mb-1">전체 흐름</p>
+              <p className="text-sm text-cream/80 leading-6">{value.narrativeFlow.arc}</p>
+            </div>
+            <div>
+              <p className="text-xs text-sand/60 mb-1">브릿지 1</p>
+              <p className="text-sm text-cream/80 leading-6">{value.narrativeFlow.bridge1}</p>
+            </div>
+            <div>
+              <p className="text-xs text-sand/60 mb-1">브릿지 2</p>
+              <p className="text-sm text-cream/80 leading-6">{value.narrativeFlow.bridge2}</p>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       <div className="space-y-4">
         {value.slides.map((slide, index) => (
           <div key={slide.id} className="rounded-[28px] border border-white/10 bg-black/20 p-5">

@@ -40,8 +40,8 @@ async def analyze(seed_topic: str, items: list[ResearchItem]) -> tuple[str, list
                 platform_fit_score=scores["platform_fit"],
                 confidence_score=scores["confidence"],
                 suggested_hooks=[
-                    f"What people are missing about {candidate}",
-                    f"The easiest entry point into {candidate}",
+                    f"{candidate}에 대해 사람들이 놓치는 것",
+                    f"{candidate}를 시작하는 가장 쉬운 방법",
                 ],
             )
         )
@@ -52,11 +52,11 @@ async def analyze(seed_topic: str, items: list[ResearchItem]) -> tuple[str, list
             {
                 "role": "user",
                 "content": (
-                    f"Research goal: analyze a seed topic\n"
-                    f"Seed topic: {seed_topic}\n\n"
-                    f"Candidate subtopics: {', '.join(candidates[:10])}\n\n"
-                    f"Explain what angles look promising now, which ones are more searchable vs shareable, "
-                    f"and how a content team should act on them."
+                    f"리서치 목표: 시드 토픽 심층 분석\n"
+                    f"시드 토픽: {seed_topic}\n\n"
+                    f"서브토픽 후보: {', '.join(candidates[:10])}\n\n"
+                    f"지금 유망한 각도가 어떤 것인지, 검색형 vs 공유형 중 어느 쪽인지, "
+                    f"콘텐츠 팀이 어떻게 활용해야 할지 한국어로 요약해주세요."
                 ),
             }
         ],

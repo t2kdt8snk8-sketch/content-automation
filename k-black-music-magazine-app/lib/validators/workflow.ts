@@ -73,15 +73,22 @@ export const researchResponseSchema = z.object({
   candidates: z.array(researchCandidateSchema).length(5),
 });
 
+export const narrativeFlowSchema = z.object({
+  arc: z.string().min(1),
+  bridge1: z.string().min(1),
+  bridge2: z.string().min(1),
+});
+
 export const slideDraftSchema = z.object({
   id: z.string().min(1),
-  section: z.enum(["cover", "provoke", "hook", "concept", "main"]),
+  section: z.enum(["cover", "provoke", "hook", "bridge", "concept", "main", "payoff"]),
   headline: z.string().min(1),
   body: z.string(),
   pointWord: z.string().optional().or(z.literal("")),
 });
 
 export const copyDraftResponseSchema = z.object({
+  narrativeFlow: narrativeFlowSchema.optional(),
   slides: z.array(slideDraftSchema).min(4),
   captionAngle: z.string().min(1),
   captionReason: z.string().min(1),

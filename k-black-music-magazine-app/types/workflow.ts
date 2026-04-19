@@ -56,12 +56,18 @@ export interface MainTrackAnalysis {
   conceptSource: "web" | "ai_inference";
 }
 
+export interface NarrativeFlow {
+  arc: string;
+  bridge1: string;
+  bridge2: string;
+}
+
 export interface SlideDraft {
   id: string;
   headline: string;
   body: string;
   pointWord?: string;
-  section: "cover" | "provoke" | "hook" | "concept" | "main";
+  section: "cover" | "provoke" | "hook" | "bridge" | "concept" | "main" | "payoff";
 }
 
 export interface CopyDraft {
@@ -69,6 +75,7 @@ export interface CopyDraft {
   hookArtist: string;
   mainTrack: string;
   mainArtist: string;
+  narrativeFlow?: NarrativeFlow;
   slides: SlideDraft[];
   captionAngle: string;
   captionReason: string;

@@ -33,7 +33,7 @@ export async function generateCopyDraft(input: {
     body: JSON.stringify({
       model: process.env.COPYWRITER_MODEL ?? "claude-sonnet-4-6",
       max_tokens: 8096,
-      temperature: 0.7,
+      temperature: 0.8,
       system: COPYWRITER_SYSTEM_PROMPT,
       messages: [{ role: "user", content: prompt }],
     }),
@@ -60,6 +60,7 @@ export async function generateCopyDraft(input: {
     hookArtist: input.hookArtist,
     mainTrack: input.mainTrack,
     mainArtist: input.mainArtist,
+    narrativeFlow: parsed.narrativeFlow,
     slides: parsed.slides.map((slide, index) => ({
       id: slide.id || `slide-${index + 1}`,
       section: slide.section,

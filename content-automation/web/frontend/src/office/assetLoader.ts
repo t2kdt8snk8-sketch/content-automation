@@ -164,9 +164,10 @@ async function decodeFurniture(base: string, catalog: CatalogEntry[]): Promise<R
 // ── 공개 API ─────────────────────────────────────────────────────
 
 let loaded = false;
+let cachedLayout: unknown = null;
 
 export async function loadAssets(basePath: string): Promise<unknown> {
-  if (loaded) return;
+  if (loaded) return cachedLayout;
   loaded = true;
 
   const base = basePath.endsWith('/') ? basePath : `${basePath}/`;
@@ -195,5 +196,6 @@ export async function loadAssets(basePath: string): Promise<unknown> {
 
   console.log(`[AssetLoader] 완료: ${characters.length}명, ${floorSprites.length}개 바닥, ${wallSets.length}개 벽, ${catalog.length}개 가구`);
 
+  cachedLayout = layout;
   return layout;
 }

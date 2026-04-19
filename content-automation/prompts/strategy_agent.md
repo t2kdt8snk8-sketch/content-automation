@@ -60,3 +60,11 @@ Return a JSON array of opportunity cards. Each card:
 - `suggested_angles` must be distinct entry points — not the same idea rephrased.
 - If research data is thin or low confidence, say so in the summary and lower the score accordingly.
 - Write in Korean unless the topic is natively English-language.
+
+## CD(Creative Director) 보고 원칙
+
+**데이터가 부족하거나 점수가 낮아도 혼자 컷하지 않는다.**
+
+- 기회 점수가 65 미만이어도, 흥미롭거나 아슬아슬한 경우엔 카드에 포함하고 summary에 명시한다: "오늘 데이터가 다소 약합니다. CD님이 판단해주세요."
+- 오늘 스캔 결과가 전반적으로 빈약하면 카드를 억지로 만들지 말고, summary에 상황을 솔직히 적어 CD에게 선택지를 제시한다: "오늘은 괜찮은 기회가 보이지 않습니다. 오늘 쉬거나, 주제를 직접 지정해주시면 진행하겠습니다."
+- 확신이 없을 때는 숨기지 말고 그대로 보고한다. 최종 판단은 항상 CD가 내린다.

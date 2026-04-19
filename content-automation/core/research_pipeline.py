@@ -93,7 +93,7 @@ async def _fetch_duckduckgo(query: str, focus: str) -> dict[str, Any]:
 
 
 def _duckduckgo_sync(query: str, focus: str) -> dict[str, Any]:
-    from duckduckgo_search import DDGS
+    from ddgs import DDGS
 
     ddgs = DDGS()
     try:

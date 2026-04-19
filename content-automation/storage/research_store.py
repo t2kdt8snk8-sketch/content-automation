@@ -64,6 +64,37 @@ async def list_research_results(limit: int = 20) -> list[dict]:
     return rows[:limit]
 
 
+async def get_research_result(file_id: str) -> dict | None:
+    """파일 stem(id)으로 리서치 결과 단건 조회."""
+    base = _research_dir()
+    for history_dir in base.glob("*/history"):
+        target = history_dir / f"{file_id}.json"
+        if target.exists():
+            try:
+                async with aiofiles.open(target, encoding="utf-8") as f:
+                    payload = json.loads(await f.read())
+                return {
+                    "id": target.stem,
+                    "goal": payload["request"]["goal"],
+                    "query": payload["request"]["query"],
+                    "created_at": payload.get("created_at"),
+                    "summary": payload.get("summary", ""),
+                    "raw_items": [
+                        {
+                            "source": item.get("source", ""),
+                            "title": item.get("title", ""),
+                            "snippet": item.get("snippet", ""),
+                            "url": item.get("url", ""),
+                            "published_at": item.get("published_at"),
+                        }
+                        for item in payload.get("raw_items", [])
+                    ],
+                }
+            except Exception:
+                return None
+    return None
+
+
 async def delete_research_result(file_id: str) -> bool:
     """주어진 파일 stem(id)에 해당하는 히스토리 파일을 삭제합니다."""
     base = _research_dir()

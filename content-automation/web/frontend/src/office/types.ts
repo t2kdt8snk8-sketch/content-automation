@@ -66,6 +66,8 @@ export interface FurnitureInstance {
   zY: number;
   /** Render-time horizontal flip flag (for mirrored side variants) */
   mirrored?: boolean;
+  /** Optional scale multiplier applied at draw time (e.g. 1.5 for whiteboard) */
+  renderScale?: number;
 }
 
 export interface ToolActivity {
@@ -180,4 +182,6 @@ export interface Character {
   matrixEffectSeeds: number[];
   /** Workspace folder name (only set for multi-root workspaces) */
   folderName?: string;
+  /** Display name shown above the character as a name tag */
+  label?: string;
 }

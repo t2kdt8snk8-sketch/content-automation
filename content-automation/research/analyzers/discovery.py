@@ -40,8 +40,8 @@ async def analyze(query: str, items: list[ResearchItem]) -> tuple[str, list[Rese
                 platform_fit_score=scores["platform_fit"],
                 confidence_score=scores["confidence"],
                 suggested_hooks=[
-                    f"Why {candidate} is suddenly everywhere",
-                    f"The real shift behind {candidate}",
+                    f"{candidate}가 갑자기 주목받는 이유",
+                    f"{candidate} 뒤에 숨은 진짜 변화",
                 ],
             )
         )
@@ -52,10 +52,10 @@ async def analyze(query: str, items: list[ResearchItem]) -> tuple[str, list[Rese
             {
                 "role": "user",
                 "content": (
-                    f"Research goal: discover opportunities\n"
-                    f"User query: {query}\n\n"
-                    f"Topic candidates: {', '.join(candidates[:10])}\n\n"
-                    f"Summarize the strongest emerging areas and why they matter for a marketing team."
+                    f"리서치 목표: 콘텐츠 기회 발굴\n"
+                    f"검색 쿼리: {query}\n\n"
+                    f"토픽 후보: {', '.join(candidates[:10])}\n\n"
+                    f"마케팅 팀이 지금 주목해야 할 가장 유망한 영역과 그 이유를 한국어로 요약해주세요."
                 ),
             }
         ],

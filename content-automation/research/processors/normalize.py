@@ -29,7 +29,7 @@ def extract_topic_candidates(items: list[ResearchItem]) -> list[str]:
     counts: dict[str, int] = {}
     for item in items:
         text = f"{item.title} {item.snippet}".lower()
-        words = re.findall(r"[a-z0-9][a-z0-9\-\+]{2,}", text)
+        words = re.findall(r"[a-z0-9가-힣][a-z0-9\-\+가-힣]{1,}", text)
         phrases = _make_phrases(words)
         for phrase in phrases:
             if phrase in _STOPWORDS or len(phrase) < 4:
