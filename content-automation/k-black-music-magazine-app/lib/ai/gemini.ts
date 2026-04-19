@@ -15,7 +15,7 @@ import { extractJsonBlock, safeJsonParse } from "@/lib/utils";
 import { conceptDetailResponseSchema, mainTrackAnalysisSchema, researchResponseSchema, trackDetailsResponseSchema } from "@/lib/validators/workflow";
 import type { ConceptDetail, HookCandidate, MainTrackAnalysis, SourceLink, TrackDetail } from "@/types/workflow";
 
-const FLASH_MODEL = "gemini-3.1-pro-preview";
+const FLASH_MODEL = "gemini-3.1-flash-lite-preview";
 const PRO_MODEL = "gemini-3.1-pro-preview";
 const GEMINI_TIMEOUT_MS = 55000;
 
@@ -77,7 +77,7 @@ async function callGemini(
           systemInstruction: { parts: [{ text: systemPrompt }] },
           contents: [{ role: "user", parts: [{ text: userPrompt }] }],
           tools: [{ google_search: {} }],
-          generationConfig: { temperature },
+          generationConfig: { responseMimeType: "application/json", temperature },
         }),
         signal: AbortSignal.timeout(GEMINI_TIMEOUT_MS),
       },
@@ -215,7 +215,6 @@ export async function findCandidatesForConcept(input: {
 }
 
 export async function researchTrackDetails(input: {
-  workflowId: string;
   hookTrack: string;
   hookArtist: string;
   mainTrack: string;
@@ -231,18 +230,6 @@ export async function researchTrackDetails(input: {
 
   const prompt = buildTrackDetailUserPrompt(input);
   const result = await callGemini(FLASH_MODEL, TRACK_DETAIL_SYSTEM_PROMPT, prompt, 0.4);
-
-  // 진단용: 검색 소스 및 원본 응답 디버그 저장
-  setWorkflowDebug(input.workflowId, {
-    gemini: {
-      model: FLASH_MODEL,
-      prompt,
-      rawText: result.text,
-      rawResponse: result.text,
-      searchNotes: result.sources.map((s) => s.title),
-      sources: result.sources,
-    },
-  });
 
   const parsed = trackDetailsResponseSchema.parse(safeJsonParse(extractJsonBlock(result.text)));
 
