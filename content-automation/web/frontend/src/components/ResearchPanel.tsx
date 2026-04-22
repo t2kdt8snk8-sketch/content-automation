@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 
 interface ResearchItem {
   id: string;
-  query?: string;
+  title?: string;
   summary?: string;
   created_at?: string;
   [key: string]: unknown;
@@ -22,9 +22,7 @@ export function ResearchPanel() {
 
   useEffect(() => {
     const ac = new AbortController();
-    const token = sessionStorage.getItem('auth_token');
-    const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
-    void fetch('/api/research/archive', { credentials: 'include', headers, signal: ac.signal })
+    void fetch('/api/research/archive', { credentials: 'include', signal: ac.signal })
       .then((r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
@@ -47,9 +45,7 @@ export function ResearchPanel() {
     setDetailLoading(true);
     setDetailError(null);
     try {
-      const authToken = sessionStorage.getItem('auth_token');
-      const authHeaders: Record<string, string> = authToken ? { Authorization: `Bearer ${authToken}` } : {};
-      const r = await fetch(`/api/research/archive/${id}`, { credentials: 'include', headers: authHeaders });
+      const r = await fetch(`/api/research/archive/${id}`, { credentials: 'include' });
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       const data = await r.json() as ResearchDetail;
       setSelected(data);
@@ -106,7 +102,7 @@ export function ResearchPanel() {
           }}
         >
           <div style={{ fontWeight: 600, marginBottom: 4 }}>
-            {item.query ?? item.id}
+            {item.title ?? item.id}
           </div>
           {item.summary && (
             <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>

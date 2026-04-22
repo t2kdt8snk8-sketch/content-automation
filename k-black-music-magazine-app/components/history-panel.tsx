@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import type { WorkflowStatus } from "@/types/workflow";
 
@@ -11,6 +11,8 @@ interface WorkflowSummary {
   status: WorkflowStatus;
   created_at: string;
   selected_candidate_id: string | null;
+  selected_candidate: { track_name: string; artist_name: string } | null;
+  copy_draft: unknown | null;
 }
 
 const STATUS_LABEL: Record<WorkflowStatus, string> = {
@@ -38,16 +40,42 @@ export function HistoryPanel({ onSelect, onReset }: HistoryPanelProps) {
   const [open, setOpen] = useState(false);
   const [workflows, setWorkflows] = useState<WorkflowSummary[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  function copyWorkflowId(e: React.MouseEvent, id: string) {
+    e.stopPropagation();
+    void navigator.clipboard.writeText(id).then(() => {
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2000);
+    });
+  }
 
   useEffect(() => {
     if (!open) return;
     setLoading(true);
+    setLoadError(null);
     fetch("/api/workflows")
-      .then((r) => r.json())
+      .then(async (r) => {
+        const raw = await r.text();
+        let data: { workflows?: WorkflowSummary[]; error?: string } = {};
+        try {
+          data = JSON.parse(raw) as { workflows?: WorkflowSummary[]; error?: string };
+        } catch {
+          data = {};
+        }
+        if (!r.ok) {
+          throw new Error(data.error ?? raw.trim() ?? `HTTP ${r.status}`);
+        }
+        return data;
+      })
       .then((data: { workflows?: WorkflowSummary[] }) => {
         setWorkflows(data.workflows ?? []);
       })
-      .catch(() => {})
+      .catch((error) => {
+        setWorkflows([]);
+        setLoadError(error instanceof Error ? error.message : "히스토리를 불러오지 못했습니다.");
+      })
       .finally(() => setLoading(false));
   }, [open]);
 
@@ -82,34 +110,54 @@ export function HistoryPanel({ onSelect, onReset }: HistoryPanelProps) {
 
             {loading ? (
               <p className="py-8 text-center text-sm text-cream/40">불러오는 중...</p>
+            ) : loadError ? (
+              <p className="py-8 text-center text-sm text-red-300/80">{loadError}</p>
             ) : workflows.length === 0 ? (
               <p className="py-8 text-center text-sm text-cream/40">작업 내역이 없어요</p>
             ) : (
               <ul className="space-y-2 overflow-y-auto pr-1 flex-1 min-h-0">
                 {workflows.map((w) => (
                   <li key={w.id}>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        onSelect(w.id);
-                        setOpen(false);
-                      }}
-                      className="w-full rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-left transition hover:bg-white/[0.08]"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold text-cream">{w.main_track}</p>
-                          <p className="mt-0.5 truncate text-xs text-cream/55">{w.main_artist}</p>
-                        </div>
-                        <div className="flex shrink-0 flex-col items-end gap-1.5">
-                          <div className="flex items-center gap-1.5">
-                            <span className={`h-1.5 w-1.5 rounded-full ${STATUS_DOT[w.status]}`} />
-                            <span className="text-xs text-cream/60">{STATUS_LABEL[w.status]}</span>
+                    <div className="rounded-2xl border border-white/10 bg-white/[0.04] transition hover:bg-white/[0.08]">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onSelect(w.id);
+                          setOpen(false);
+                        }}
+                        className="w-full p-4 text-left"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-semibold text-cream">{w.main_track}</p>
+                            <p className="mt-0.5 truncate text-xs text-cream/55">{w.main_artist}</p>
+                            {w.selected_candidate && (
+                              <p className="mt-1.5 truncate text-xs text-bronze/80">
+                                ↳ {w.selected_candidate.track_name} · {w.selected_candidate.artist_name}
+                              </p>
+                            )}
                           </div>
-                          <span className="text-[11px] text-cream/35">{formatDate(w.created_at)}</span>
+                          <div className="flex shrink-0 flex-col items-end gap-1.5">
+                            <div className="flex items-center gap-1.5">
+                              <span className={`h-1.5 w-1.5 rounded-full ${STATUS_DOT[w.status]}`} />
+                              <span className="text-xs text-cream/60">{STATUS_LABEL[w.status]}</span>
+                            </div>
+                            <span className="text-[11px] text-cream/35">{formatDate(w.created_at)}</span>
+                          </div>
                         </div>
-                      </div>
-                    </button>
+                      </button>
+                      {w.copy_draft ? (
+                        <div className="border-t border-white/10 px-4 py-3">
+                          <button
+                            type="button"
+                            onClick={(e) => copyWorkflowId(e, w.id)}
+                            className="text-xs text-sand/70 hover:text-sand"
+                          >
+                            {copiedId === w.id ? "Figma ID 복사됨 ✓" : "Figma ID 복사"}
+                          </button>
+                        </div>
+                      ) : null}
+                    </div>
                   </li>
                 ))}
               </ul>

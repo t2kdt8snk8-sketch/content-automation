@@ -126,6 +126,8 @@ export interface Workflow {
   mainArtist: string;
   status: WorkflowStatus;
   selectedCandidateId: string | null;
+  selectedTrackName?: string | null;
+  selectedArtistName?: string | null;
   candidates: HookCandidate[];
   mainTrackAnalysis?: MainTrackAnalysis;
   mainTrackExternalContext?: string;

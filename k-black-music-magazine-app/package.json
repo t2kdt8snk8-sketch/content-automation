@@ -9,12 +9,10 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.49.4",
+    "@supabase/supabase-js": "^2.104.0",
     "axios": "^1.14.0",
     "cheerio": "^1.2.0",
-    "googleapis": "^144.0.0",
     "next": "14.2.5",
-    "playwright": "^1.54.2",
     "react": "^18",
     "react-dom": "^18",
     "rss-parser": "^3.13.0",

@@ -23,7 +23,7 @@ export function AgentPanel({ agentName, lastEvent, onClose }: AgentPanelProps) {
   const [isActive, setIsActive] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  const displayName = AGENT_DISPLAY_NAMES[agentName as keyof typeof AGENT_DISPLAY_NAMES] ?? agentName;
+  const displayName = (AGENT_DISPLAY_NAMES as Record<string, string>)[agentName] ?? agentName;
 
   useEffect(() => {
     if (!lastEvent) return;

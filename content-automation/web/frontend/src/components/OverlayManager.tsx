@@ -121,6 +121,7 @@ function getPanelTitle(type: OverlayType | string): string {
     case 'production':
       return '제작';
     case 'whiteboard':
+    case 'research_agent':
       return '리서치 아카이브';
     case 'opportunity':
       return '기회 카드';
@@ -154,6 +155,7 @@ function renderPanel(
     case 'production':
       return <ProductionPanel />;
     case 'whiteboard':
+    case 'research_agent':
       return <ResearchPanel />;
     case 'opportunity':
       return <FeedPanel lastEvent={lastEvent} />;

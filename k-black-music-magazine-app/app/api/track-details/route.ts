@@ -51,17 +51,32 @@ export async function POST(request: NextRequest) {
     const workflow = await getWorkflow(workflowId);
     const candidate = workflow.candidates.find((c) => c.id === candidateId);
 
-    if (!candidate) {
+    console.log("[track-details] request:", {
+      candidateId,
+      candidatesInDB: workflow.candidates.length,
+      candidateFound: !!candidate,
+      workflowSelectedCandidateId: workflow.selectedCandidateId,
+      workflowSelectedTrackName: workflow.selectedTrackName,
+      workflowSelectedArtistName: workflow.selectedArtistName,
+    });
+
+    // 히스토리 복원 시 hook_candidates가 없을 수 있으므로 workflow에 저장된 이름으로 fallback
+    const trackName = candidate?.trackName ?? workflow.selectedTrackName ?? null;
+    const artistName = candidate?.artistName ?? workflow.selectedArtistName ?? null;
+
+    console.log("[track-details] resolved:", { trackName, artistName });
+
+    if (!trackName || !artistName) {
       return NextResponse.json({ error: "후보를 찾지 못했습니다." }, { status: 404 });
     }
 
-    const concept = workflow.mainTrackAnalysis?.concept ?? candidate.soundConcept;
-    const conceptExplanation = workflow.mainTrackAnalysis?.conceptExplanation ?? candidate.connectionReason;
+    const concept = workflow.mainTrackAnalysis?.concept ?? candidate?.soundConcept ?? "";
+    const conceptExplanation = workflow.mainTrackAnalysis?.conceptExplanation ?? candidate?.connectionReason ?? "";
 
     // 훅 곡 외부 자료 수집 (실패해도 graceful fallback)
     const [youtubeSettled, webzineSettled] = await Promise.allSettled([
-      collectYouTubeSources(candidate.trackName, candidate.artistName),
-      collectWebzineSources(candidate.trackName, candidate.artistName),
+      collectYouTubeSources(trackName, artistName),
+      collectWebzineSources(trackName, artistName),
     ]);
 
     const youtubeResults = youtubeSettled.status === "fulfilled" ? youtubeSettled.value : [];
@@ -75,16 +90,16 @@ export async function POST(request: NextRequest) {
 
     // 4-A: Flash 모델로 감상 원재료/TMI 수집
     const trackDetails = await researchTrackDetails({
-      hookTrack: candidate.trackName,
-      hookArtist: candidate.artistName,
+      hookTrack: trackName,
+      hookArtist: artistName,
       mainTrack: workflow.mainTrack,
       mainArtist: workflow.mainArtist,
     });
 
     // 4-B: Pro 모델로 개념 구현 분석 (4-A 완료 후 순차 실행)
     const conceptDetail = await researchConceptDetail({
-      hookTrack: candidate.trackName,
-      hookArtist: candidate.artistName,
+      hookTrack: trackName,
+      hookArtist: artistName,
       mainTrack: workflow.mainTrack,
       mainArtist: workflow.mainArtist,
       concept,

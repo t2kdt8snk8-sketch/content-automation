@@ -17,7 +17,7 @@ import type { ConceptDetail, HookCandidate, MainTrackAnalysis, SourceLink, Track
 
 const FLASH_MODEL = "gemini-3.1-flash-lite-preview";
 const PRO_MODEL = "gemini-3.1-pro-preview";
-const GEMINI_TIMEOUT_MS = 55000;
+const GEMINI_TIMEOUT_MS = 60000;
 
 interface GroundingChunk {
   web?: { uri?: string; title?: string };
@@ -126,7 +126,7 @@ export async function extractConceptForWorkflow(input: {
 
   const prompt = buildConceptExtractionUserPrompt(input.mainTrack, input.mainArtist, input.externalContext);
   try {
-    const result = await callGemini(PRO_MODEL, CONCEPT_EXTRACTOR_SYSTEM_PROMPT, prompt, 0.3);
+    const result = await callGemini(PRO_MODEL, CONCEPT_EXTRACTOR_SYSTEM_PROMPT, prompt, 0);
     return mainTrackAnalysisSchema.parse(safeJsonParse(extractJsonBlock(result.text)));
   } catch {
     return fallback;
@@ -229,7 +229,7 @@ export async function researchTrackDetails(input: {
   }
 
   const prompt = buildTrackDetailUserPrompt(input);
-  const result = await callGemini(FLASH_MODEL, TRACK_DETAIL_SYSTEM_PROMPT, prompt, 0.4);
+  const result = await callGemini(PRO_MODEL, TRACK_DETAIL_SYSTEM_PROMPT, prompt, 0);
 
   const parsed = trackDetailsResponseSchema.parse(safeJsonParse(extractJsonBlock(result.text)));
 

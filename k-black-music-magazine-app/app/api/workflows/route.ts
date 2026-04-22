@@ -7,8 +7,16 @@ export async function GET(request: NextRequest) {
   try {
     const id = request.nextUrl.searchParams.get("id");
     if (id) {
-      const workflow = await getWorkflow(id);
-      return NextResponse.json({ workflow });
+      try {
+        const workflow = await getWorkflow(id);
+        return NextResponse.json({ workflow });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "워크플로우를 찾을 수 없습니다.";
+        if (message.includes("찾을 수 없습니다")) {
+          return NextResponse.json({ workflow: null, error: message }, { status: 404 });
+        }
+        throw error;
+      }
     }
     const workflows = await listWorkflows();
     return NextResponse.json({ workflows });

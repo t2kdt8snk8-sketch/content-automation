@@ -11,8 +11,8 @@ export default defineConfig({
   base: '/static/',
   server: {
     proxy: {
-      '/ws': { target: 'ws://localhost:8000', ws: true },
-      '/api': { target: 'http://localhost:8000' },
+      '/ws': { target: 'ws://localhost:8001', ws: true },
+      '/api': { target: 'http://localhost:8001' },
     },
   },
 });

@@ -24,6 +24,40 @@ export interface LoadedAssetData {
   sprites: Record<string, SpriteData>;
 }
 
+// Editor palette should match resize_assets.py mappings 1:1 (processed_assets source of truth).
+// Keep this list in sync with resize_assets.py destination IDs.
+const EDITOR_ALLOWED_TYPE_IDS = new Set<string>([
+  'WHITEBOARD',
+  'DESK_FRONT',
+  'PC_FRONT_OFF',
+  'PC_REVERSED',
+  'COFFEE',
+  'CUSHIONED_CHAIR_FRONT',
+  'CUSHIONED_CHAIR_BACK',
+  'CUSHIONED_CHAIR_SIDE',
+  'LARGE_PAINTING',
+  'SMALL_PAINTING',
+  'PLANT',
+  'PLANT_2',
+  'LARGE_PLANT',
+  'POT',
+  'CACTUS',
+  'HANGING_PLANT',
+  'WATER_DISPENSER',
+  'ROBOT_VACUUM',
+  'BOSS_MONITOR',
+  'BOSS_MONITOR_NEW',
+  'SERVER_RACK',
+  'BOSS_CHAIR',
+  'SOFA_SLICE_51',
+  'SLICE_54_1',
+  'CHAIR_REVERSED',
+  'CHAIR_FRONT_CLEAN',
+  'CHART_1',
+  'CHART_2',
+  'CHART_3',
+]);
+
 export type FurnitureCategory =
   | 'desks'
   | 'chairs'
@@ -285,9 +319,9 @@ export function buildDynamicCatalog(assets: LoadedAssetData): boolean {
   // Store full internal catalog (all variants — for getCatalogEntry lookups)
   internalCatalog = allEntries;
 
-  // Visible catalog: exclude non-front variants and "on" state variants
+  // Visible catalog: exactly the processed-assets mapped type IDs.
   const visibleEntries = allEntries.filter(
-    (e) => !nonFrontIds.has(e.type) && !onStateIds.has(e.type),
+    (e) => EDITOR_ALLOWED_TYPE_IDS.has(e.type) && !onStateIds.has(e.type),
   );
 
   // Strip orientation/state suffix from labels for grouped variants

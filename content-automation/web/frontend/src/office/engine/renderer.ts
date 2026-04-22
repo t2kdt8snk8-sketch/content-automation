@@ -122,35 +122,28 @@ export function renderScene(
   // Furniture
   for (const f of furniture) {
     const cached = getCachedSprite(f.sprite, zoom);
+    const scaleX = f.scaleX ?? f.scale ?? 1;
+    const scaleY = f.scaleY ?? f.scale ?? 1;
     const fx = offsetX + f.x * zoom;
     const fy = offsetY + f.y * zoom;
+    const drawW = cached.width * scaleX;
+    const drawH = cached.height * scaleY;
     if (f.mirrored) {
-      const dw = f.renderScale ? cached.width * f.renderScale : cached.width;
-      const dh = f.renderScale ? cached.height * f.renderScale : cached.height;
       drawables.push({
         zY: f.zY,
         draw: (c) => {
           c.save();
-          c.translate(fx + dw, fy);
+          c.translate(fx + drawW, fy);
           c.scale(-1, 1);
-          c.drawImage(cached, 0, 0, dw, dh);
+          c.drawImage(cached, 0, 0, drawW, drawH);
           c.restore();
-        },
-      });
-    } else if (f.renderScale) {
-      const dw = cached.width * f.renderScale;
-      const dh = cached.height * f.renderScale;
-      drawables.push({
-        zY: f.zY,
-        draw: (c) => {
-          c.drawImage(cached, fx, fy, dw, dh);
         },
       });
     } else {
       drawables.push({
         zY: f.zY,
         draw: (c) => {
-          c.drawImage(cached, fx, fy);
+          c.drawImage(cached, fx, fy, drawW, drawH);
         },
       });
     }
@@ -170,7 +163,10 @@ export function renderScene(
     // Sort characters by bottom of their tile (not center) so they render
     // in front of same-row furniture (e.g. chairs) but behind furniture
     // at lower rows (e.g. desks, bookshelves that occlude from below).
-    const charZY = ch.y + TILE_SIZE / 2 + CHARACTER_Z_SORT_OFFSET;
+    const charZY =
+      ch.state === CharacterState.TYPE
+        ? ch.tileRow * TILE_SIZE + TILE_SIZE + CHARACTER_Z_SORT_OFFSET
+        : ch.y + TILE_SIZE / 2 + CHARACTER_Z_SORT_OFFSET;
 
     // Matrix spawn/despawn effect — skip outline, use per-pixel rendering
     if (ch.matrixEffect) {
@@ -364,25 +360,31 @@ export function renderGhostPreview(
   offsetY: number,
   zoom: number,
   mirrored: boolean = false,
+  scaleX: number = 1,
+  scaleY: number = 1,
 ): void {
   const cached = getCachedSprite(sprite, zoom);
+  const safeScaleX = Math.max(0.25, scaleX);
+  const safeScaleY = Math.max(0.25, scaleY);
+  const drawW = cached.width * safeScaleX;
+  const drawH = cached.height * safeScaleY;
   const x = offsetX + col * TILE_SIZE * zoom;
   const y = offsetY + row * TILE_SIZE * zoom;
   ctx.save();
   ctx.globalAlpha = GHOST_PREVIEW_SPRITE_ALPHA;
   if (mirrored) {
-    ctx.translate(x + cached.width, y);
+    ctx.translate(x + drawW, y);
     ctx.scale(-1, 1);
-    ctx.drawImage(cached, 0, 0);
+    ctx.drawImage(cached, 0, 0, drawW, drawH);
   } else {
-    ctx.drawImage(cached, x, y);
+    ctx.drawImage(cached, x, y, drawW, drawH);
   }
   // Tint overlay — reset transform for correct fill position
   ctx.restore();
   ctx.save();
   ctx.globalAlpha = GHOST_PREVIEW_TINT_ALPHA;
   ctx.fillStyle = valid ? GHOST_VALID_TINT : GHOST_INVALID_TINT;
-  ctx.fillRect(x, y, cached.width, cached.height);
+  ctx.fillRect(x, y, drawW, drawH);
   ctx.restore();
 }
 
@@ -533,41 +535,6 @@ function renderBubbles(
   }
 }
 
-// ── Name tags ───────────────────────────────────────────────────
-
-function renderNameTags(
-  ctx: CanvasRenderingContext2D,
-  characters: Character[],
-  offsetX: number,
-  offsetY: number,
-  zoom: number,
-): void {
-  const fontSize = Math.max(8, Math.round(6 * zoom));
-  ctx.font = `${fontSize}px monospace`;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'bottom';
-
-  for (const ch of characters) {
-    if (!ch.label) continue;
-    if (ch.matrixEffect) continue; // 스폰/디스폰 중에는 숨김
-
-    const sittingOffset = ch.state === CharacterState.TYPE ? CHARACTER_SITTING_OFFSET_PX : 0;
-    // 캐릭터 상단보다 약간 위에 표시 (캐릭터 스프라이트 높이≈24px 기준)
-    const tagX = Math.round(offsetX + ch.x * zoom);
-    const tagY = Math.round(offsetY + (ch.y + sittingOffset) * zoom - 22 * zoom - 2);
-
-    // 텍스트만 (배경 없음) — 얇은 외곽선으로 가독성 확보
-    ctx.save();
-    ctx.strokeStyle = 'rgba(0,0,0,0.8)';
-    ctx.lineWidth = 2;
-    ctx.lineJoin = 'round';
-    ctx.strokeText(ch.label, tagX, tagY);
-    ctx.fillStyle = 'rgba(200,220,255,0.95)';
-    ctx.fillText(ch.label, tagX, tagY);
-    ctx.restore();
-  }
-}
-
 export interface ButtonBounds {
   /** Center X in device pixels */
   cx: number;
@@ -584,6 +551,8 @@ export interface EditorRenderState {
   showGrid: boolean;
   ghostSprite: SpriteData | null;
   ghostMirrored: boolean;
+  ghostScaleX: number;
+  ghostScaleY: number;
   ghostCol: number;
   ghostRow: number;
   ghostValid: boolean;
@@ -613,6 +582,50 @@ export interface SelectionRenderState {
   characters: Map<number, Character>;
 }
 
+export interface RenderOptions {
+  backgroundImage?: HTMLImageElement | null;
+  hideTileLayer?: boolean;
+  agentRankById?: Record<number, string>;
+}
+
+function renderAgentRanks(
+  ctx: CanvasRenderingContext2D,
+  characters: Character[],
+  offsetX: number,
+  offsetY: number,
+  zoom: number,
+  agentRankById: Record<number, string>,
+): void {
+  ctx.save();
+  const fontSize = Math.max(10, Math.round(6 * zoom));
+  ctx.font = `700 ${fontSize}px monospace`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'bottom';
+
+  for (const ch of characters) {
+    const rank = agentRankById[ch.id];
+    if (!rank) continue;
+
+    const sprites = getCharacterSprites(ch.palette, ch.hueShift);
+    const spriteData = getCharacterSprite(ch, sprites);
+    const cached = getCachedSprite(spriteData, zoom);
+    const sittingOffset = ch.state === CharacterState.TYPE ? CHARACTER_SITTING_OFFSET_PX : 0;
+    const drawY = Math.round(offsetY + (ch.y + sittingOffset) * zoom - cached.height);
+
+    const x = Math.round(offsetX + ch.x * zoom);
+    let y = drawY - 4 * zoom;
+    if (ch.bubbleType) y -= 14 * zoom;
+
+    ctx.lineWidth = Math.max(2, Math.round(zoom));
+    ctx.strokeStyle = 'rgba(4, 8, 22, 0.95)';
+    ctx.strokeText(rank, x, y);
+    ctx.fillStyle = '#f8fafc';
+    ctx.fillText(rank, x, y);
+  }
+
+  ctx.restore();
+}
+
 export function renderFrame(
   ctx: CanvasRenderingContext2D,
   canvasWidth: number,
@@ -628,6 +641,7 @@ export function renderFrame(
   tileColors?: Array<ColorValue | null>,
   layoutCols?: number,
   layoutRows?: number,
+  options?: RenderOptions,
 ): { offsetX: number; offsetY: number } {
   // Clear
   ctx.clearRect(0, 0, canvasWidth, canvasHeight);
@@ -642,8 +656,14 @@ export function renderFrame(
   const offsetX = Math.floor((canvasWidth - mapW) / 2) + Math.round(panX);
   const offsetY = Math.floor((canvasHeight - mapH) / 2) + Math.round(panY);
 
+  if (options?.backgroundImage) {
+    ctx.drawImage(options.backgroundImage, offsetX, offsetY, mapW, mapH);
+  }
+
   // Draw tiles (floor + wall base color)
-  renderTileGrid(ctx, tileMap, offsetX, offsetY, zoom, tileColors, layoutCols);
+  if (!options?.hideTileLayer) {
+    renderTileGrid(ctx, tileMap, offsetX, offsetY, zoom, tileColors, layoutCols);
+  }
 
   // Seat indicators (below furniture/characters, on top of floor)
   if (selection) {
@@ -660,7 +680,8 @@ export function renderFrame(
   }
 
   // Build wall instances for z-sorting with furniture and characters
-  const wallInstances = hasWallSprites() ? getWallInstances(tileMap, tileColors, layoutCols) : [];
+  const wallInstances =
+    !options?.hideTileLayer && hasWallSprites() ? getWallInstances(tileMap, tileColors, layoutCols) : [];
   const allFurniture = wallInstances.length > 0 ? [...wallInstances, ...furniture] : furniture;
 
   // Draw walls + furniture + characters (z-sorted)
@@ -671,8 +692,10 @@ export function renderFrame(
   // Speech bubbles (always on top of characters)
   renderBubbles(ctx, characters, offsetX, offsetY, zoom);
 
-  // Name tags (above speech bubbles)
-  renderNameTags(ctx, characters, offsetX, offsetY, zoom);
+  // Agent ranks above character heads
+  if (options?.agentRankById) {
+    renderAgentRanks(ctx, characters, offsetX, offsetY, zoom, options.agentRankById);
+  }
 
   // Editor overlays
   if (editor) {
@@ -702,6 +725,8 @@ export function renderFrame(
         offsetY,
         zoom,
         editor.ghostMirrored,
+        editor.ghostScaleX,
+        editor.ghostScaleY,
       );
     }
     if (editor.hasSelection) {

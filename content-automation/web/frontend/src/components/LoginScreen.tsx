@@ -18,12 +18,18 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
       const res = await fetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ password }),
       });
       const data = (await res.json()) as { token?: string; error?: string };
       if (res.ok && data.token) {
-        sessionStorage.setItem('auth_token', data.token);
-        onLogin(data.token);
+        const meRes = await fetch('/api/me', { credentials: 'include' });
+        const me = (await meRes.json()) as { authenticated?: boolean };
+        if (meRes.ok && me.authenticated) {
+          onLogin('cookie');
+        } else {
+          setError('로그인은 성공했지만 인증 쿠키가 저장되지 않았어요. 서버를 재시작해 주세요.');
+        }
       } else {
         setError(data.error ?? '로그인 실패');
       }

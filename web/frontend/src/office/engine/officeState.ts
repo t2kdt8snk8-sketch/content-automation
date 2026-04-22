@@ -15,12 +15,17 @@ import {
 import { getAnimationFrames, getCatalogEntry, getOnStateType } from '../layout/furnitureCatalog.js';
 import {
   createDefaultLayout,
+  getFootprintForItem,
+  getScalePercents,
   getBlockedTiles,
+  getPlacementBlockedTiles,
+  getPlacementTiles,
   layoutToFurnitureInstances,
   layoutToSeats,
   layoutToTileMap,
 } from '../layout/layoutSerializer.js';
 import { findPath, getWalkableTiles, isWalkable } from '../layout/tileMap.js';
+import { getRotatedType, isRotatable } from '../layout/furnitureCatalog.js';
 import { getLoadedCharacterCount } from '../sprites/spriteData.js';
 import type {
   Character,
@@ -63,6 +68,13 @@ export class OfficeState {
     this.walkableTiles = getWalkableTiles(this.tileMap, this.blockedTiles);
   }
 
+  private getSeatCenter(seat: Seat): { x: number; y: number } {
+    return {
+      x: seat.seatCol * TILE_SIZE + TILE_SIZE / 2 + (seat.seatOffsetX || 0),
+      y: seat.seatRow * TILE_SIZE + TILE_SIZE / 2 + (seat.seatOffsetY || 0),
+    };
+  }
+
   /** Rebuild all derived state from a new layout. Reassigns existing characters.
    *  @param shift Optional pixel shift to apply when grid expands left/up */
   rebuildFromLayout(layout: OfficeLayout, shift?: { col: number; row: number }): void {
@@ -100,10 +112,9 @@ export class OfficeState {
           // Snap character to seat position
           ch.tileCol = seat.seatCol;
           ch.tileRow = seat.seatRow;
-          const cx = seat.seatCol * TILE_SIZE + TILE_SIZE / 2;
-          const cy = seat.seatRow * TILE_SIZE + TILE_SIZE / 2;
-          ch.x = cx;
-          ch.y = cy;
+          const center = this.getSeatCenter(seat);
+          ch.x = center.x;
+          ch.y = center.y;
           ch.dir = seat.facingDir;
           continue;
         }
@@ -121,8 +132,9 @@ export class OfficeState {
         const seat = this.seats.get(seatId)!;
         ch.tileCol = seat.seatCol;
         ch.tileRow = seat.seatRow;
-        ch.x = seat.seatCol * TILE_SIZE + TILE_SIZE / 2;
-        ch.y = seat.seatRow * TILE_SIZE + TILE_SIZE / 2;
+        const center = this.getSeatCenter(seat);
+        ch.x = center.x;
+        ch.y = center.y;
         ch.dir = seat.facingDir;
       }
     }
@@ -155,6 +167,238 @@ export class OfficeState {
 
   getLayout(): OfficeLayout {
     return this.layout;
+  }
+
+  /** Snapshot of placed furniture entries (layout-space coordinates). */
+  getPlacedFurniture(): PlacedFurniture[] {
+    return this.layout.furniture.map((f) => ({ ...f }));
+  }
+
+  /** Find a placed furniture item by uid. */
+  getPlacedFurnitureByUid(uid: string): PlacedFurniture | null {
+    return this.layout.furniture.find((f) => f.uid === uid) ?? null;
+  }
+
+  /** Hit test furniture by world pixel position. Returns top-most uid or null. */
+  getFurnitureAt(worldX: number, worldY: number): string | null {
+    const candidates = this.layout.furniture
+      .map((item, idx) => {
+        const entry = getCatalogEntry(item.type);
+        if (!entry) return null;
+        const inst = this.furniture[idx];
+        if (inst) {
+          const scaleX = inst.scaleX ?? inst.scale ?? 1;
+          const scaleY = inst.scaleY ?? inst.scale ?? 1;
+          const spriteW = inst.sprite[0]?.length ?? entry.sprite[0]?.length ?? 0;
+          const spriteH = inst.sprite.length ?? entry.sprite.length;
+          return {
+            uid: item.uid,
+            x: inst.x,
+            y: inst.y,
+            w: spriteW * scaleX,
+            h: spriteH * scaleY,
+            z: inst.zY,
+          };
+        }
+
+        const x = item.col * TILE_SIZE + (item.offsetX || 0);
+        const y = item.row * TILE_SIZE + (item.offsetY || 0);
+        const { scaleXPct, scaleYPct } = getScalePercents(item);
+        const w = (entry.sprite[0]?.length ?? 0) * (scaleXPct / 100);
+        const h = entry.sprite.length * (scaleYPct / 100);
+        return { uid: item.uid, x, y, w, h, z: y + h };
+      })
+      .filter((v): v is { uid: string; x: number; y: number; w: number; h: number; z: number } => v !== null)
+      .sort((a, b) => b.z - a.z);
+
+    for (const c of candidates) {
+      if (worldX >= c.x && worldX <= c.x + c.w && worldY >= c.y && worldY <= c.y + c.h) {
+        return c.uid;
+      }
+    }
+    return null;
+  }
+
+  private canPlaceFurnitureAt(type: string, col: number, row: number, excludeUid?: string): boolean {
+    const entry = getCatalogEntry(type);
+    if (!entry) return false;
+    const existing = excludeUid ? this.layout.furniture.find((f) => f.uid === excludeUid) : null;
+    const { footprintW, footprintH } = getFootprintForItem(existing ?? { scalePct: 100 }, entry);
+    if (col < 0 || row < 0) return false;
+    if (col + footprintW > this.layout.cols) return false;
+    if (row + footprintH > this.layout.rows) return false;
+
+    const blocked = getPlacementBlockedTiles(this.layout.furniture, excludeUid);
+    const candidateTiles = getPlacementTiles(
+      {
+        uid: '__candidate__',
+        type,
+        col,
+        row,
+        ...(existing?.scalePct ? { scalePct: existing.scalePct } : {}),
+        ...(existing?.scaleXPct ? { scaleXPct: existing.scaleXPct } : {}),
+        ...(existing?.scaleYPct ? { scaleYPct: existing.scaleYPct } : {}),
+      },
+      entry,
+    );
+
+    for (const key of candidateTiles) {
+      if (blocked.has(key)) return false;
+    }
+    return true;
+  }
+
+  canPlaceFurniture(type: string, col: number, row: number, excludeUid?: string): boolean {
+    return this.canPlaceFurnitureAt(type, col, row, excludeUid);
+  }
+
+  placeFurniture(type: string, col: number, row: number): string | null {
+    if (!this.canPlaceFurnitureAt(type, col, row)) return null;
+    const uid = `f-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    this.layout.furniture.push({ uid, type, col, row });
+    this.rebuildFromLayout(this.layout);
+    return uid;
+  }
+
+  moveFurniture(uid: string, col: number, row: number): boolean {
+    const idx = this.layout.furniture.findIndex((f) => f.uid === uid);
+    if (idx < 0) return false;
+    const item = this.layout.furniture[idx];
+    if (!this.canPlaceFurnitureAt(item.type, col, row, uid)) return false;
+    this.layout.furniture[idx] = { ...item, col, row };
+    this.rebuildFromLayout(this.layout);
+    return true;
+  }
+
+  removeFurniture(uid: string): boolean {
+    const before = this.layout.furniture.length;
+    this.layout.furniture = this.layout.furniture.filter((f) => f.uid !== uid);
+    if (this.layout.furniture.length === before) return false;
+    this.rebuildFromLayout(this.layout);
+    return true;
+  }
+
+  rotateFurniture(uid: string, direction: 'cw' | 'ccw' = 'cw'): boolean {
+    const idx = this.layout.furniture.findIndex((f) => f.uid === uid);
+    if (idx < 0) return false;
+    const item = this.layout.furniture[idx];
+    if (!isRotatable(item.type)) return false;
+    const rotated = getRotatedType(item.type, direction);
+    if (!rotated) return false;
+    if (!this.canPlaceFurnitureAt(rotated, item.col, item.row, uid)) return false;
+    this.layout.furniture[idx] = { ...item, type: rotated };
+    this.rebuildFromLayout(this.layout);
+    return true;
+  }
+
+  nudgeFurnitureOffset(uid: string, dx: number, dy: number): boolean {
+    const idx = this.layout.furniture.findIndex((f) => f.uid === uid);
+    if (idx < 0) return false;
+    const item = this.layout.furniture[idx];
+    const nextX = (item.offsetX || 0) + dx;
+    const nextY = (item.offsetY || 0) + dy;
+    const MAX_OFFSET = 12;
+    const clampedX = Math.max(-MAX_OFFSET, Math.min(MAX_OFFSET, nextX));
+    const clampedY = Math.max(-MAX_OFFSET, Math.min(MAX_OFFSET, nextY));
+    if (clampedX === (item.offsetX || 0) && clampedY === (item.offsetY || 0)) return false;
+    this.layout.furniture[idx] = { ...item, offsetX: clampedX, offsetY: clampedY };
+    this.rebuildFromLayout(this.layout);
+    return true;
+  }
+
+  nudgeFurnitureScale(uid: string, deltaPct: number): boolean {
+    const idx = this.layout.furniture.findIndex((f) => f.uid === uid);
+    if (idx < 0) return false;
+    const item = this.layout.furniture[idx];
+    const { scaleXPct, scaleYPct } = getScalePercents(item);
+    const nextX = scaleXPct + deltaPct;
+    const nextY = scaleYPct + deltaPct;
+    const MIN_SCALE_PCT = 25;
+    const MAX_SCALE_PCT = 300;
+    const clampedX = Math.max(MIN_SCALE_PCT, Math.min(MAX_SCALE_PCT, Math.round(nextX)));
+    const clampedY = Math.max(MIN_SCALE_PCT, Math.min(MAX_SCALE_PCT, Math.round(nextY)));
+    if (clampedX === scaleXPct && clampedY === scaleYPct) return false;
+    this.layout.furniture[idx] = { ...item, scalePct: clampedX, scaleXPct: clampedX, scaleYPct: clampedY };
+    this.rebuildFromLayout(this.layout);
+    return true;
+  }
+
+  setFurnitureScale(uid: string, scalePct: number): boolean {
+    const idx = this.layout.furniture.findIndex((f) => f.uid === uid);
+    if (idx < 0) return false;
+    const item = this.layout.furniture[idx];
+    const MIN_SCALE_PCT = 25;
+    const MAX_SCALE_PCT = 300;
+    const clamped = Math.max(MIN_SCALE_PCT, Math.min(MAX_SCALE_PCT, Math.round(scalePct)));
+    const { scaleXPct, scaleYPct } = getScalePercents(item);
+    if (clamped === scaleXPct && clamped === scaleYPct) return false;
+    this.layout.furniture[idx] = { ...item, scalePct: clamped, scaleXPct: clamped, scaleYPct: clamped };
+    this.rebuildFromLayout(this.layout);
+    return true;
+  }
+
+  nudgeFurnitureScaleX(uid: string, deltaPct: number): boolean {
+    const idx = this.layout.furniture.findIndex((f) => f.uid === uid);
+    if (idx < 0) return false;
+    const item = this.layout.furniture[idx];
+    const MIN_SCALE_PCT = 25;
+    const MAX_SCALE_PCT = 300;
+    const { scaleXPct, scaleYPct } = getScalePercents(item);
+    const clampedX = Math.max(MIN_SCALE_PCT, Math.min(MAX_SCALE_PCT, Math.round(scaleXPct + deltaPct)));
+    if (clampedX === scaleXPct) return false;
+    this.layout.furniture[idx] = { ...item, scaleXPct: clampedX, scaleYPct };
+    this.rebuildFromLayout(this.layout);
+    return true;
+  }
+
+  nudgeFurnitureScaleY(uid: string, deltaPct: number): boolean {
+    const idx = this.layout.furniture.findIndex((f) => f.uid === uid);
+    if (idx < 0) return false;
+    const item = this.layout.furniture[idx];
+    const MIN_SCALE_PCT = 25;
+    const MAX_SCALE_PCT = 300;
+    const { scaleXPct, scaleYPct } = getScalePercents(item);
+    const clampedY = Math.max(MIN_SCALE_PCT, Math.min(MAX_SCALE_PCT, Math.round(scaleYPct + deltaPct)));
+    if (clampedY === scaleYPct) return false;
+    this.layout.furniture[idx] = { ...item, scaleXPct, scaleYPct: clampedY };
+    this.rebuildFromLayout(this.layout);
+    return true;
+  }
+
+  setFurnitureScaleX(uid: string, scaleXPct: number): boolean {
+    const idx = this.layout.furniture.findIndex((f) => f.uid === uid);
+    if (idx < 0) return false;
+    const item = this.layout.furniture[idx];
+    const MIN_SCALE_PCT = 25;
+    const MAX_SCALE_PCT = 300;
+    const clampedX = Math.max(MIN_SCALE_PCT, Math.min(MAX_SCALE_PCT, Math.round(scaleXPct)));
+    const current = getScalePercents(item);
+    if (clampedX === current.scaleXPct) return false;
+    this.layout.furniture[idx] = {
+      ...item,
+      scaleXPct: clampedX,
+      scaleYPct: current.scaleYPct,
+    };
+    this.rebuildFromLayout(this.layout);
+    return true;
+  }
+
+  setFurnitureScaleY(uid: string, scaleYPct: number): boolean {
+    const idx = this.layout.furniture.findIndex((f) => f.uid === uid);
+    if (idx < 0) return false;
+    const item = this.layout.furniture[idx];
+    const MIN_SCALE_PCT = 25;
+    const MAX_SCALE_PCT = 300;
+    const clampedY = Math.max(MIN_SCALE_PCT, Math.min(MAX_SCALE_PCT, Math.round(scaleYPct)));
+    const current = getScalePercents(item);
+    if (clampedY === current.scaleYPct) return false;
+    this.layout.furniture[idx] = {
+      ...item,
+      scaleXPct: current.scaleXPct,
+      scaleYPct: clampedY,
+    };
+    this.rebuildFromLayout(this.layout);
+    return true;
   }
 
   /** Get the blocked-tile key for a character's own seat, or null */
@@ -298,6 +542,9 @@ export class OfficeState {
       const seat = this.seats.get(seatId)!;
       seat.assigned = true;
       ch = createCharacter(id, palette, seatId, seat, hueShift);
+      const center = this.getSeatCenter(seat);
+      ch.x = center.x;
+      ch.y = center.y;
     } else {
       // No seats — spawn at random walkable tile
       const spawn =
@@ -376,6 +623,9 @@ export class OfficeState {
       // Already at seat or no path — sit down
       ch.state = CharacterState.TYPE;
       ch.dir = seat.facingDir;
+      const center = this.getSeatCenter(seat);
+      ch.x = center.x;
+      ch.y = center.y;
       ch.frame = 0;
       ch.frameTimer = 0;
       if (!ch.isActive) {
@@ -403,6 +653,9 @@ export class OfficeState {
       // Already at seat — sit down
       ch.state = CharacterState.TYPE;
       ch.dir = seat.facingDir;
+      const center = this.getSeatCenter(seat);
+      ch.x = center.x;
+      ch.y = center.y;
       ch.frame = 0;
       ch.frameTimer = 0;
       if (!ch.isActive) {
@@ -717,6 +970,17 @@ export class OfficeState {
       this.withOwnSeatUnblocked(ch, () =>
         updateCharacter(ch, dt, this.walkableTiles, this.seats, this.tileMap, this.blockedTiles),
       );
+
+      // Keep seated characters visually anchored to the chair, including fine offset nudges.
+      if (ch.state === CharacterState.TYPE && ch.seatId) {
+        const seat = this.seats.get(ch.seatId);
+        if (seat && ch.tileCol === seat.seatCol && ch.tileRow === seat.seatRow) {
+          const center = this.getSeatCenter(seat);
+          ch.x = center.x;
+          ch.y = center.y;
+          ch.dir = seat.facingDir;
+        }
+      }
 
       // Tick bubble timer for waiting bubbles
       if (ch.bubbleType === 'waiting') {

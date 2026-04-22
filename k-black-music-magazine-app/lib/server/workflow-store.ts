@@ -21,6 +21,8 @@ type WorkflowRecord = {
   main_artist: string;
   status: WorkflowStatus;
   selected_candidate_id: string | null;
+  selected_track_name: string | null;
+  selected_artist_name: string | null;
   main_track_analysis: MainTrackAnalysis | null;
   main_track_external_context: string | null;
   copy_draft: CopyDraft | null;
@@ -82,6 +84,8 @@ function toWorkflow(workflow: WorkflowRecord, candidates: CandidateRecord[]): Wo
     mainArtist: workflow.main_artist,
     status: workflow.status,
     selectedCandidateId: workflow.selected_candidate_id,
+    selectedTrackName: workflow.selected_track_name,
+    selectedArtistName: workflow.selected_artist_name,
     mainTrackAnalysis: workflow.main_track_analysis ?? undefined,
     mainTrackExternalContext: workflow.main_track_external_context ?? undefined,
     copyDraft: workflow.copy_draft ?? undefined,
@@ -186,21 +190,25 @@ export async function getWorkflow(workflowId: string) {
     return getMemoryWorkflow(workflowId);
   }
 
-  const [{ data: workflowData, error: workflowError }, { data: candidatesData, error: candidatesError }] =
-    await Promise.all([
-      supabase.from("workflows").select("*").eq("id", workflowId).single(),
-      supabase.from("hook_candidates").select("*").eq("workflow_id", workflowId),
-    ]);
-
+  const { data: workflowData, error: workflowError } = await supabase
+    .from("workflows")
+    .select("*")
+    .eq("id", workflowId)
+    .single();
   if (workflowError || !workflowData) {
     throw new Error(workflowError?.message ?? "워크플로우를 찾을 수 없습니다.");
   }
 
-  if (candidatesError) {
-    throw new Error(candidatesError.message);
-  }
+  const { data: candidatesData, error: candidatesError } = await supabase
+    .from("hook_candidates")
+    .select("*")
+    .eq("workflow_id", workflowId);
 
-  return toWorkflow(workflowData as WorkflowRecord, (candidatesData ?? []) as CandidateRecord[]);
+  // 히스토리 복원은 후보 목록이 없어도 진행 가능해야 하므로,
+  // 후보 조회 실패 시 빈 배열로 복구한다.
+  const safeCandidates = candidatesError ? [] : ((candidatesData ?? []) as CandidateRecord[]);
+
+  return toWorkflow(workflowData as WorkflowRecord, safeCandidates);
 }
 
 export async function updateWorkflowStatus(workflowId: string, status: WorkflowStatus) {
@@ -342,11 +350,19 @@ export async function selectCandidate(workflowId: string, candidateId: string) {
     return cloneWorkflow(nextWorkflow);
   }
 
+  const { data: candidateData } = await supabase
+    .from("hook_candidates")
+    .select("track_name, artist_name")
+    .eq("id", candidateId)
+    .single();
+
   const { data, error } = await supabase
     .from("workflows")
     .update({
       status: "selected",
       selected_candidate_id: candidateId,
+      selected_track_name: candidateData?.track_name ?? null,
+      selected_artist_name: candidateData?.artist_name ?? null,
       updated_at: now(),
     })
     .eq("id", workflowId)
@@ -381,7 +397,7 @@ export async function saveExternalContext(workflowId: string, externalContext: s
   return toWorkflow(data as WorkflowRecord, []);
 }
 
-export async function listWorkflows(limit = 20) {
+export async function listWorkflows(limit = 200) {
   const supabase = createSupabaseServerClient();
 
   if (!supabase) {
@@ -390,15 +406,75 @@ export async function listWorkflows(limit = 20) {
 
   const { data, error } = await supabase
     .from("workflows")
-    .select("id, main_track, main_artist, status, created_at, selected_candidate_id")
+    .select("id, main_track, main_artist, status, created_at, selected_candidate_id, selected_track_name, selected_artist_name, copy_draft")
     .order("created_at", { ascending: false })
     .limit(limit);
 
   if (error) {
-    throw new Error(error.message);
+    const { data: fallbackData, error: fallbackError } = await supabase
+      .from("workflows")
+      .select("id, main_track, main_artist, status, created_at, selected_candidate_id")
+      .order("created_at", { ascending: false })
+      .limit(limit);
+
+    if (fallbackError) {
+      throw new Error(fallbackError.message);
+    }
+
+    const fallbackRows = ((fallbackData ?? []) as Pick<WorkflowRecord, "id" | "main_track" | "main_artist" | "status" | "created_at" | "selected_candidate_id">[]);
+    const fallbackCandidateIds = fallbackRows.map((r) => r.selected_candidate_id).filter((id): id is string => !!id);
+    let fallbackCandidateMap: Record<string, { track_name: string; artist_name: string }> = {};
+    if (fallbackCandidateIds.length > 0) {
+      const { data: fallbackCandidateData } = await supabase
+        .from("hook_candidates")
+        .select("id, track_name, artist_name")
+        .in("id", fallbackCandidateIds);
+      if (fallbackCandidateData) {
+        for (const c of fallbackCandidateData as { id: string; track_name: string; artist_name: string }[]) {
+          fallbackCandidateMap[c.id] = { track_name: c.track_name, artist_name: c.artist_name };
+        }
+      }
+    }
+
+    return fallbackRows.map((row) => ({
+      ...row,
+      copy_draft: null,
+      selected_candidate: row.selected_candidate_id ? (fallbackCandidateMap[row.selected_candidate_id] ?? null) : null,
+    }));
   }
 
-  return (data ?? []) as Pick<WorkflowRecord, "id" | "main_track" | "main_artist" | "status" | "created_at" | "selected_candidate_id">[];
+  const rows = (data ?? []) as (Pick<WorkflowRecord, "id" | "main_track" | "main_artist" | "status" | "created_at" | "selected_candidate_id" | "selected_track_name" | "selected_artist_name" | "copy_draft">)[];
+
+  // 신규 레코드는 selected_track_name/artist_name이 바로 있음.
+  // 구 레코드(컬럼 없는 것)는 hook_candidates 조인으로 보완.
+  const legacyIds = rows
+    .filter((r) => r.selected_candidate_id && !r.selected_track_name)
+    .map((r) => r.selected_candidate_id as string);
+
+  let candidateMap: Record<string, { track_name: string; artist_name: string }> = {};
+  if (legacyIds.length > 0) {
+    const { data: candidateData } = await supabase
+      .from("hook_candidates")
+      .select("id, track_name, artist_name")
+      .in("id", legacyIds);
+    if (candidateData) {
+      for (const c of candidateData as { id: string; track_name: string; artist_name: string }[]) {
+        candidateMap[c.id] = { track_name: c.track_name, artist_name: c.artist_name };
+      }
+    }
+  }
+
+  return rows.map((row) => {
+    let selected_candidate: { track_name: string; artist_name: string } | null = null;
+    if (row.selected_candidate_id) {
+      if (row.selected_track_name && row.selected_artist_name) {
+        selected_candidate = { track_name: row.selected_track_name, artist_name: row.selected_artist_name };
+      } else {
+        selected_candidate = candidateMap[row.selected_candidate_id] ?? null;
+      }
+    }
+    return { ...row, selected_candidate };
+  });
 }
 
 export async function seedResearchFallback(workflowId: string, mainTrack: string, mainArtist: string) {
@@ -437,4 +513,3 @@ export async function saveTrackDetails(
 
   if (error) throw new Error(error.message);
 }
-

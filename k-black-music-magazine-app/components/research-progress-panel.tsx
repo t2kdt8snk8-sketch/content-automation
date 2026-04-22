@@ -21,7 +21,7 @@ function getStatusCopy(status: WorkflowStatus | "idle") {
       return {
         title: "리서치 완료",
         body: "후보 5개를 확보했습니다. 카드 중 하나를 선택해 주세요.",
-      };ㄴ
+      };
     case "selected":
       return {
         title: "선택 완료",

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { CopyDraft, ExportedAsset, TrackDetail } from "@/types/workflow";
+import type { CopyDraft, TrackDetail } from "@/types/workflow";
 import { ErrorState } from "@/components/error-state";
 
 function TrackDetailCard({ track }: { track: TrackDetail }) {
@@ -45,39 +45,43 @@ function TrackDetailCard({ track }: { track: TrackDetail }) {
 }
 
 interface CopyWorkflowPanelProps {
+  workflowId?: string;
   selectedTrackLabel?: string;
   trackDetails: TrackDetail[] | null;
   copyDraft: CopyDraft | null;
-  assets: ExportedAsset[];
   detailing: boolean;
   generating: boolean;
-  exporting: boolean;
-  exportError: string | null;
   onDetail: () => Promise<void>;
   onGenerate: () => Promise<void>;
-  onExport: () => Promise<void>;
 }
 
 export function CopyWorkflowPanel({
+  workflowId,
   selectedTrackLabel,
   trackDetails,
   copyDraft,
-  assets,
   detailing,
   generating,
-  exporting,
-  exportError,
   onDetail,
   onGenerate,
-  onExport,
 }: CopyWorkflowPanelProps) {
+  const [figmaCopied, setFigmaCopied] = useState(false);
+
+  function copyFigmaId() {
+    if (!workflowId) return;
+    void navigator.clipboard.writeText(workflowId).then(() => {
+      setFigmaCopied(true);
+      setTimeout(() => setFigmaCopied(false), 2000);
+    });
+  }
+
   return (
     <section className="space-y-4">
       <div className="px-1">
         <p className="text-xs uppercase tracking-[0.2em] text-sand/70">Step 5-6</p>
-        <h2 className="mt-2 text-xl font-semibold text-cream">카피 생성과 PNG export</h2>
+        <h2 className="mt-2 text-xl font-semibold text-cream">카피 생성</h2>
         <p className="mt-2 text-sm leading-6 text-cream/65">
-          선택된 훅 곡을 바탕으로 슬라이드 초안을 만들고, HTML/CSS 렌더링 후 PNG로 뽑습니다.
+          선택된 훅 곡을 바탕으로 슬라이드 카피 초안을 만듭니다.
         </p>
       </div>
 
@@ -131,77 +135,15 @@ export function CopyWorkflowPanel({
           </button>
           <button
             type="button"
-            disabled={!copyDraft || exporting}
-            onClick={() => void onExport()}
+            disabled={!copyDraft || !workflowId}
+            onClick={copyFigmaId}
             className="rounded-2xl bg-cream px-4 py-4 text-sm font-semibold text-ink disabled:cursor-not-allowed disabled:bg-white/20 disabled:text-cream/40"
           >
-            {exporting ? "PNG 생성 중..." : "PNG export + Drive 업로드"}
+            {figmaCopied ? "복사됨 ✓" : "Figma ID 복사"}
           </button>
         </div>
       </div>
 
-      {exportError ? <ErrorState message={exportError} /> : null}
-
-      {assets.length > 0 ? (
-        <div className="rounded-[28px] border border-white/10 bg-black/20 p-5">
-          <div className="mb-3 flex items-center justify-between">
-            <p className="text-sm font-semibold text-cream">생성된 파일</p>
-            <button
-              type="button"
-              onClick={() => {
-                assets.forEach((asset, i) => {
-                  if (!asset.previewDataUrl) return;
-                  setTimeout(() => {
-                    const a = document.createElement("a");
-                    a.href = asset.previewDataUrl!;
-                    a.download = asset.fileName;
-                    a.click();
-                  }, i * 200);
-                });
-              }}
-              className="rounded-full border border-white/10 bg-white/[0.06] px-3 py-1 text-xs text-cream/70 hover:text-cream"
-            >
-              전체 다운로드
-            </button>
-          </div>
-          <div className="space-y-3">
-            {assets.map((asset) => (
-              <div key={asset.fileName} className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-                {asset.previewDataUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={asset.previewDataUrl}
-                    alt={asset.fileName}
-                    className="mb-3 aspect-[4/5] w-full rounded-2xl border border-white/10 object-cover"
-                  />
-                ) : null}
-                <div className="flex items-center justify-between gap-3">
-                  <p className="text-sm font-medium text-cream truncate">{asset.fileName}</p>
-                  {asset.previewDataUrl ? (
-                    <a
-                      href={asset.previewDataUrl}
-                      download={asset.fileName}
-                      className="shrink-0 rounded-full border border-white/10 bg-white/[0.06] px-3 py-1 text-xs text-cream/70 hover:text-cream"
-                    >
-                      다운로드
-                    </a>
-                  ) : null}
-                </div>
-                {asset.driveWebViewLink ? (
-                  <a
-                    href={asset.driveWebViewLink}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-2 block text-sm text-sand"
-                  >
-                    Google Drive에서 보기
-                  </a>
-                ) : null}
-              </div>
-            ))}
-          </div>
-        </div>
-      ) : null}
     </section>
   );
 }

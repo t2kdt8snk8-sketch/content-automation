@@ -14,9 +14,9 @@ import { ResearchProgressPanel } from "@/components/research-progress-panel";
 import { SelectedCandidateSummary } from "@/components/selected-candidate-summary";
 import { SelectionBar } from "@/components/selection-bar";
 import { WorkflowStepper } from "@/components/workflow-stepper";
-import type { ConceptDetail, CopyDraft, ExportedAsset, TrackDetail, Workflow, WorkflowStatus } from "@/types/workflow";
+import type { ConceptDetail, CopyDraft, TrackDetail, Workflow, WorkflowStatus } from "@/types/workflow";
 
-type BusyStage = "idle" | "submitting" | "selecting" | "detailing" | "copying" | "exporting";
+type BusyStage = "idle" | "submitting" | "selecting" | "detailing" | "copying";
 
 function getErrorMessage(error: unknown, fallback: string) {
   return error instanceof Error ? error.message : fallback;
@@ -65,8 +65,6 @@ export default function HomePage() {
   const [conceptDetail, setConceptDetail] = useState<ConceptDetail | null>(null);
   const [mainTrackExternalContext, setMainTrackExternalContext] = useState<string | undefined>(undefined);
   const [copyDraft, setCopyDraft] = useState<CopyDraft | null>(null);
-  const [assets, setAssets] = useState<ExportedAsset[]>([]);
-  const [exportError, setExportError] = useState<string | null>(null);
 
   // 새로고침 시 이전 세션 초기화
   useEffect(() => {
@@ -79,15 +77,17 @@ export default function HomePage() {
   const isSelecting = busyStage === "selecting";
   const isDetailing = busyStage === "detailing";
   const isCopying = busyStage === "copying";
-  const isExporting = busyStage === "exporting";
 
   const selectedTrackLabel = useMemo(() => {
     const candidateId = selectedCandidateId ?? workflow?.selectedCandidateId;
     const selected = workflow?.candidates.find((candidate) => candidate.id === candidateId);
     if (selected) return `${selected.trackName} · ${selected.artistName}`;
     if (copyDraft) return `${copyDraft.hookTrack} · ${copyDraft.hookArtist}`;
+    if (workflow?.selectedTrackName && workflow?.selectedArtistName) {
+      return `${workflow.selectedTrackName} · ${workflow.selectedArtistName}`;
+    }
     return undefined;
-  }, [selectedCandidateId, workflow?.selectedCandidateId, workflow?.candidates, copyDraft]);
+  }, [selectedCandidateId, workflow?.selectedCandidateId, workflow?.candidates, workflow?.selectedTrackName, workflow?.selectedArtistName, copyDraft]);
 
   const selectedCandidate = useMemo(() => {
     const candidateId = selectedCandidateId ?? workflow?.selectedCandidateId;
@@ -108,7 +108,6 @@ export default function HomePage() {
     setTrackDetails(null);
     setConceptDetail(null);
     setCopyDraft(null);
-    setAssets([]);
     setError(null);
   }
 
@@ -117,6 +116,14 @@ export default function HomePage() {
       const res = await fetch(`/api/workflows?id=${workflowId}`);
       const data = await res.json() as { workflow?: Workflow };
       if (!data.workflow) throw new Error();
+      console.log("[restore] workflow loaded:", {
+        id: data.workflow.id,
+        status: data.workflow.status,
+        selectedCandidateId: data.workflow.selectedCandidateId,
+        selectedTrackName: data.workflow.selectedTrackName,
+        selectedArtistName: data.workflow.selectedArtistName,
+        candidatesCount: data.workflow.candidates?.length,
+      });
       setWorkflow(data.workflow);
       setStatus(data.workflow.status);
       setSelectedCandidateId(data.workflow.selectedCandidateId ?? null);
@@ -124,7 +131,6 @@ export default function HomePage() {
       setTrackDetails(data.workflow.trackDetails ?? null);
       setConceptDetail(data.workflow.conceptDetail ?? null);
       setCopyDraft(data.workflow.copyDraft ?? null);
-      setAssets([]);
       setError(null);
       localStorage.setItem("kblack_workflow_id", workflowId);
       if (data.workflow.selectedCandidateId) {
@@ -142,7 +148,6 @@ export default function HomePage() {
       setSelectedCandidateId(null);
       setTrackDetails(null);
       setCopyDraft(null);
-      setAssets([]);
       setBusyStage("submitting");
 
       let created: { workflow: Workflow };
@@ -195,7 +200,6 @@ export default function HomePage() {
       setError(null);
       setBusyStage("selecting");
       setCopyDraft(null);
-      setAssets([]);
       const result = await postJson<{ workflow: Workflow }>("/api/select", {
         workflowId: workflow.id,
         candidateId: selectedCandidateId,
@@ -211,7 +215,13 @@ export default function HomePage() {
   }
 
   async function fetchTrackDetails() {
-    const candidateId = selectedCandidateId ?? workflow?.selectedCandidateId;
+    let candidateId = selectedCandidateId ?? workflow?.selectedCandidateId;
+    if (!candidateId && copyDraft && workflow) {
+      const matched = workflow.candidates.find(
+        (c) => c.trackName === copyDraft.hookTrack && c.artistName === copyDraft.hookArtist,
+      );
+      if (matched) candidateId = matched.id;
+    }
     if (!workflow || !candidateId) return;
 
     try {
@@ -253,7 +263,6 @@ export default function HomePage() {
         conceptDetail: conceptDetail ?? undefined,
       });
       setCopyDraft(result.copyDraft);
-      setAssets([]);
     } catch (copyError) {
       setError(`카피 생성 단계 실패: ${getErrorMessage(copyError, "카피 생성에 실패했습니다.")}`);
     } finally {
@@ -274,26 +283,6 @@ export default function HomePage() {
     },
     [workflow],
   );
-
-  async function exportCopy() {
-    if (!workflow || !copyDraft) {
-      return;
-    }
-
-    try {
-      setExportError(null);
-      setBusyStage("exporting");
-      const result = await postJson<{ assets: ExportedAsset[] }>("/api/export", {
-        workflowId: workflow.id,
-        copyDraft,
-      });
-      setAssets(result.assets);
-    } catch (err) {
-      setExportError(`에셋 export 단계 실패: ${getErrorMessage(err, "PNG export에 실패했습니다.")}`);
-    } finally {
-      setBusyStage("idle");
-    }
-  }
 
   return (
     <main className="min-h-screen bg-hero-radial px-4 py-6">
@@ -364,17 +353,14 @@ export default function HomePage() {
 
         {workflow?.selectedCandidateId || selectedCandidateId || copyDraft ? (
           <CopyWorkflowPanel
+            workflowId={workflow?.id}
             selectedTrackLabel={selectedTrackLabel}
             trackDetails={trackDetails}
             copyDraft={copyDraft}
-            assets={assets}
             detailing={isDetailing}
             generating={isCopying}
-            exporting={isExporting}
-            exportError={exportError}
             onDetail={fetchTrackDetails}
             onGenerate={generateCopy}
-            onExport={exportCopy}
           />
         ) : null}
 
@@ -383,7 +369,7 @@ export default function HomePage() {
         {workflow?.candidates.length ? (
           <SelectionBar
             selectedTrackLabel={selectedTrackLabel}
-            disabled={isSubmitting || isSelecting || isCopying || isExporting || status !== "researched"}
+            disabled={isSubmitting || isSelecting || isCopying || status !== "researched"}
             onConfirm={confirmSelection}
           />
         ) : null}

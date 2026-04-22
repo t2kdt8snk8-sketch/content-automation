@@ -115,21 +115,23 @@ def _set_job(job_id: str, **updates: Any) -> None:
 
 
 @app.post("/api/login")
-async def login(body: LoginRequest, response: Response) -> JSONResponse:
+async def login(body: LoginRequest) -> JSONResponse:
     if not verify_password(body.password):
         return JSONResponse({"error": "비밀번호가 틀렸어요"}, status_code=401)
     token = create_token()
-    response.set_cookie("token", token, httponly=True, samesite="lax", max_age=86400 * 7)
-    return JSONResponse({"token": token})
+    res = JSONResponse({"token": token})
+    res.set_cookie("token", token, httponly=True, samesite="lax", max_age=86400 * 7)
+    return res
 
 
 @app.post("/api/logout")
-async def logout(request: Request, response: Response) -> JSONResponse:
+async def logout(request: Request) -> JSONResponse:
     token = request.cookies.get("token")
     if token:
         revoke_token(token)
-    response.delete_cookie("token")
-    return JSONResponse({"ok": True})
+    res = JSONResponse({"ok": True})
+    res.delete_cookie("token")
+    return res
 
 
 @app.get("/api/me")

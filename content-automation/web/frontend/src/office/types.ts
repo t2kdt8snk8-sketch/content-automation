@@ -51,6 +51,10 @@ export interface Seat {
   seatCol: number;
   /** Tile row where agent sits */
   seatRow: number;
+  /** Optional pixel offset inherited from chair placement (Shift+Arrow fine nudge) */
+  seatOffsetX?: number;
+  /** Optional pixel offset inherited from chair placement (Shift+Arrow fine nudge) */
+  seatOffsetY?: number;
   /** Direction character faces when sitting (toward adjacent desk) */
   facingDir: Direction;
   assigned: boolean;
@@ -62,12 +66,16 @@ export interface FurnitureInstance {
   x: number;
   /** Pixel y (top-left) */
   y: number;
+  /** Legacy uniform render scale multiplier (1 = 100%). */
+  scale?: number;
+  /** Render X scale multiplier (1 = 100%). */
+  scaleX?: number;
+  /** Render Y scale multiplier (1 = 100%). */
+  scaleY?: number;
   /** Y value used for depth sorting (typically bottom edge) */
   zY: number;
   /** Render-time horizontal flip flag (for mirrored side variants) */
   mirrored?: boolean;
-  /** Optional scale multiplier applied at draw time (e.g. 1.5 for whiteboard) */
-  renderScale?: number;
 }
 
 export interface ToolActivity {
@@ -113,6 +121,16 @@ export interface PlacedFurniture {
   type: string; // asset ID from furniture manifest
   col: number;
   row: number;
+  /** Optional render offset in pixels for fine positioning. */
+  offsetX?: number;
+  /** Optional render offset in pixels for fine positioning. */
+  offsetY?: number;
+  /** Optional per-item render scale in percent. 100 = original size. */
+  scalePct?: number;
+  /** Optional per-item render X scale in percent. 100 = original size. */
+  scaleXPct?: number;
+  /** Optional per-item render Y scale in percent. 100 = original size. */
+  scaleYPct?: number;
   /** Optional color override for furniture */
   color?: ColorValue;
 }
@@ -182,6 +200,4 @@ export interface Character {
   matrixEffectSeeds: number[];
   /** Workspace folder name (only set for multi-root workspaces) */
   folderName?: string;
-  /** Display name shown above the character as a name tag */
-  label?: string;
 }

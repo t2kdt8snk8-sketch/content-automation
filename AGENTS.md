@@ -1,4 +1,4 @@
-# Skills Master Index
+ㅋ# Skills Master Index
 
 ## Business Growth
 - **General** (4 skills): Read `docs/skills_index/business-growth/general.md`

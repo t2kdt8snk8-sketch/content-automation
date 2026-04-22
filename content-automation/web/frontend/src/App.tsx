@@ -31,9 +31,7 @@ function App() {
   const { status, send, lastEvent } = useWebSocket(token, handleEvent);
 
   const handleOverlayOpen = useCallback((type: OverlayType) => {
-    const resolved = type === 'strategy_agent' ? 'opportunity'
-      : type === 'research_agent' ? 'whiteboard'
-      : type;
+    const resolved = type === 'strategy_agent' ? 'opportunity' : type;
     setOpenOverlays((prev) => new Set(prev).add(resolved));
   }, []);
 
@@ -52,7 +50,6 @@ function App() {
   const handleCancel = useCallback(() => { send({ type: 'cancel' }); }, [send]);
   const handleLogout = useCallback(async () => {
     await fetch('/api/logout', { method: 'POST', credentials: 'include' });
-    sessionStorage.removeItem('auth_token');
     setToken(null);
   }, []);
 
@@ -61,34 +58,60 @@ function App() {
   }
 
   return (
-    <div style={{ width: '100vw', height: '100vh', background: 'radial-gradient(circle at top, #182341 0%, #0b1020 60%)', overflow: 'hidden', position: 'relative' }}>
+    <div
+      style={{
+        width: '100vw',
+        height: '100vh',
+        background: 'radial-gradient(circle at top, #182341 0%, #0b1020 60%)',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        position: 'relative',
+      }}
+    >
       {/* 상단 바 */}
-      <div style={{
-        position: 'absolute', top: 0, left: 0, right: 0, zIndex: 30,
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '8px 16px', borderBottom: '1px solid #2d3d69',
-        background: 'rgba(11,16,32,0.8)', backdropFilter: 'blur(4px)',
-      }}>
-        <span style={{ fontFamily: 'monospace', fontSize: 16, fontWeight: 700 }}>Marketing Workspace</span>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '8px 16px',
+          borderBottom: '1px solid #2d3d69',
+          flexShrink: 0,
+        }}
+      >
+        <span style={{ fontFamily: 'monospace', fontSize: 16, fontWeight: 700 }}>
+          Marketing Workspace
+        </span>
         <button
           onClick={() => { void handleLogout(); }}
           style={{
-            background: 'transparent', border: '1px solid #2d3d69',
-            color: 'rgba(255,255,255,0.5)', padding: '4px 12px',
-            cursor: 'pointer', fontFamily: 'monospace', fontSize: 13,
+            background: 'transparent',
+            border: '1px solid #2d3d69',
+            color: 'rgba(255,255,255,0.5)',
+            padding: '4px 12px',
+            cursor: 'pointer',
+            fontFamily: 'monospace',
+            fontSize: 13,
           }}
-        >로그아웃</button>
+        >
+          로그아웃
+        </button>
       </div>
 
-      {/* 오피스 캔버스 */}
-      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: 40 }}>
-        <OfficeCanvas
-          lastEvent={lastEvent ?? events}
-          onOverlayOpen={handleOverlayOpen}
-        />
+      {/* 메인 컨텐츠 */}
+      <div
+        style={{
+          flex: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: 12,
+          overflow: 'hidden',
+        }}
+      >
+        <OfficeCanvas lastEvent={lastEvent ?? events} onOverlayOpen={handleOverlayOpen} />
       </div>
-
-      {/* 오버레이 매니저 */}
       <OverlayManager
         openOverlays={openOverlays}
         onClose={handleOverlayClose}

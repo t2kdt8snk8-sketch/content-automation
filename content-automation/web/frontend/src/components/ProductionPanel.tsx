@@ -156,7 +156,7 @@ export function ProductionPanel() {
   }
 
   return (
-    <div style={{ display: 'flex', gap: 12, overflow: 'hidden', flex: 1 }}>
+    <div style={{ display: 'flex', gap: 12, height: '100%', overflow: 'hidden' }}>
       {/* 왼쪽: 카드 목록 */}
       <div style={{ width: 200, flexShrink: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {cards.map((card) => {

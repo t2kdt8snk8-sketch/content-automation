@@ -61,6 +61,7 @@ interface CatalogEntry {
 // ── PNG 디코딩 헬퍼 ──────────────────────────────────────────────
 
 function rgbaToHex(r: number, g: number, b: number, a: number): string {
+  if (!Number.isFinite(r) || !Number.isFinite(g) || !Number.isFinite(b) || !Number.isFinite(a)) return '';
   if (a < PNG_ALPHA_THRESHOLD) return '';
   return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
 }
@@ -72,7 +73,9 @@ interface DecodedPng {
 }
 
 function getPixel(data: Uint8ClampedArray, width: number, x: number, y: number): [number, number, number, number] {
+  if (x < 0 || y < 0 || x >= width) return [0, 0, 0, 0];
   const idx = (y * width + x) * 4;
+  if (idx < 0 || idx + 3 >= data.length) return [0, 0, 0, 0];
   return [data[idx], data[idx + 1], data[idx + 2], data[idx + 3]];
 }
 
@@ -155,8 +158,12 @@ async function decodeWalls(base: string, index: AssetIndex): Promise<string[][][
 async function decodeFurniture(base: string, catalog: CatalogEntry[]): Promise<Record<string, string[][]>> {
   const sprites: Record<string, string[][]> = {};
   for (const entry of catalog) {
-    const png = await decodePng(`${base}assets/${entry.furniturePath}`);
-    sprites[entry.id] = readSprite(png, entry.width, entry.height);
+    try {
+      const png = await decodePng(`${base}assets/${entry.furniturePath}`);
+      sprites[entry.id] = readSprite(png, entry.width, entry.height);
+    } catch (error) {
+      console.error(`[AssetLoader] 가구 디코드 스킵: ${entry.id} (${entry.furniturePath})`, error);
+    }
   }
   return sprites;
 }
@@ -164,36 +171,53 @@ async function decodeFurniture(base: string, catalog: CatalogEntry[]): Promise<R
 // ── 공개 API ─────────────────────────────────────────────────────
 
 let loaded = false;
+let cachedLayout: unknown = null;
+let loadingPromise: Promise<unknown> | null = null;
 
 export async function loadAssets(basePath: string): Promise<unknown> {
-  if (loaded) return;
-  loaded = true;
+  if (loaded && cachedLayout !== null) return cachedLayout;
+  if (loadingPromise) return loadingPromise;
 
-  const base = basePath.endsWith('/') ? basePath : `${basePath}/`;
+  loadingPromise = (async () => {
+    const base = basePath.endsWith('/') ? basePath : `${basePath}/`;
 
-  const [assetIndex, catalog] = await Promise.all([
-    fetch(`${base}assets/asset-index.json`).then((r) => r.json()) as Promise<AssetIndex>,
-    fetch(`${base}assets/furniture-catalog.json`).then((r) => r.json()) as Promise<CatalogEntry[]>,
-  ]);
+    const [assetIndex, catalog] = await Promise.all([
+      fetch(`${base}assets/asset-index.json`).then((r) => r.json()) as Promise<AssetIndex>,
+      fetch(`${base}assets/furniture-catalog.json`).then((r) => r.json()) as Promise<CatalogEntry[]>,
+    ]);
 
-  const [characters, floorSprites, wallSets, furnitureSprites] = await Promise.all([
-    decodeCharacters(base, assetIndex),
-    decodeFloors(base, assetIndex),
-    decodeWalls(base, assetIndex),
-    decodeFurniture(base, catalog),
-  ]);
+    const [characters, floorSprites, wallSets, furnitureSprites] = await Promise.all([
+      decodeCharacters(base, assetIndex),
+      decodeFloors(base, assetIndex),
+      decodeWalls(base, assetIndex),
+      decodeFurniture(base, catalog),
+    ]);
 
-  setCharacterTemplates(characters);
-  setFloorSprites(floorSprites);
-  setWallSprites(wallSets);
-  buildDynamicCatalog({ catalog, sprites: furnitureSprites });
+    setCharacterTemplates(characters);
+    setFloorSprites(floorSprites);
+    setWallSprites(wallSets);
+    buildDynamicCatalog({ catalog, sprites: furnitureSprites });
 
-  const layoutPath = assetIndex.defaultLayout
-    ? `${base}assets/${assetIndex.defaultLayout}`
-    : `${base}assets/default-layout-1.json`;
-  const layout = await fetch(layoutPath).then((r) => r.json());
+    const layoutPath = assetIndex.defaultLayout
+      ? `${base}assets/${assetIndex.defaultLayout}`
+      : `${base}assets/default-layout-1.json`;
+    const layout = await fetch(layoutPath).then((r) => r.json());
 
-  console.log(`[AssetLoader] 완료: ${characters.length}명, ${floorSprites.length}개 바닥, ${wallSets.length}개 벽, ${catalog.length}개 가구`);
+    cachedLayout = layout;
+    loaded = true;
 
-  return layout;
+    console.log(`[AssetLoader] 완료: ${characters.length}명, ${floorSprites.length}개 바닥, ${wallSets.length}개 벽, ${catalog.length}개 가구`);
+
+    return layout;
+  })();
+
+  try {
+    return await loadingPromise;
+  } catch (error) {
+    loaded = false;
+    cachedLayout = null;
+    throw error;
+  } finally {
+    loadingPromise = null;
+  }
 }

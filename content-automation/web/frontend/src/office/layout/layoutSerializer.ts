@@ -1,6 +1,7 @@
 import type { ColorValue } from '../../components/ui/types.js';
 import { getColorizedSprite } from '../colorize.js';
 import type {
+  FurnitureCatalogEntry,
   FurnitureInstance,
   OfficeLayout,
   PlacedFurniture,
@@ -9,6 +10,37 @@ import type {
 } from '../types.js';
 import { DEFAULT_COLS, DEFAULT_ROWS, Direction, TILE_SIZE, TileType } from '../types.js';
 import { getCatalogEntry, getOrientationInGroup } from './furnitureCatalog.js';
+
+function getScaledFootprintSize(
+  entry: FurnitureCatalogEntry,
+  scaleXPct?: number,
+  scaleYPct?: number,
+  scalePct?: number,
+): { footprintW: number; footprintH: number } {
+  const scaleX = (scaleXPct ?? scalePct ?? 100) / 100;
+  const scaleY = (scaleYPct ?? scalePct ?? 100) / 100;
+  return {
+    footprintW: Math.max(1, Math.ceil(entry.footprintW * scaleX)),
+    footprintH: Math.max(1, Math.ceil(entry.footprintH * scaleY)),
+  };
+}
+
+export function getScalePercents(
+  item: Pick<PlacedFurniture, 'scalePct' | 'scaleXPct' | 'scaleYPct'>,
+): { scaleXPct: number; scaleYPct: number } {
+  return {
+    scaleXPct: item.scaleXPct ?? item.scalePct ?? 100,
+    scaleYPct: item.scaleYPct ?? item.scalePct ?? 100,
+  };
+}
+
+export function getFootprintForItem(
+  item: Pick<PlacedFurniture, 'scalePct' | 'scaleXPct' | 'scaleYPct'>,
+  entry: FurnitureCatalogEntry,
+): { footprintW: number; footprintH: number } {
+  const { scaleXPct, scaleYPct } = getScalePercents(item);
+  return getScaledFootprintSize(entry, scaleXPct, scaleYPct, item.scalePct);
+}
 
 /** Convert flat tile array from layout into 2D grid */
 export function layoutToTileMap(layout: OfficeLayout): TileTypeVal[][] {
@@ -44,10 +76,14 @@ export function layoutToFurnitureInstances(furniture: PlacedFurniture[]): Furnit
   for (const item of furniture) {
     const entry = getCatalogEntry(item.type);
     if (!entry) continue;
-    const x = item.col * TILE_SIZE;
-    const y = item.row * TILE_SIZE;
-    const spriteH = entry.sprite.length;
-    let zY = y + spriteH;
+    const { scaleXPct, scaleYPct } = getScalePercents(item);
+    const scaleX = scaleXPct / 100;
+    const scaleY = scaleYPct / 100;
+    const offsetX = item.offsetX || 0;
+    const offsetY = item.offsetY || 0;
+    const x = item.col * TILE_SIZE + offsetX;
+    const y = item.row * TILE_SIZE + offsetY;
+    let zY = item.row * TILE_SIZE + entry.sprite.length;
 
     // Chair z-sorting: ensure characters sitting on chairs render correctly
     if (entry.category === 'chairs') {
@@ -94,11 +130,7 @@ export function layoutToFurnitureInstances(furniture: PlacedFurniture[]): Furnit
       }
     }
 
-    instances.push({
-      sprite, x, y, zY,
-      ...(mirrored ? { mirrored: true } : {}),
-      ...(item.type === 'WHITEBOARD' ? { renderScale: 1.5 } : {}),
-    });
+    instances.push({ sprite, x, y, scaleX, scaleY, zY, ...(mirrored ? { mirrored: true } : {}) });
   }
   return instances;
 }
@@ -126,6 +158,60 @@ export function getBlockedTiles(
   return tiles;
 }
 
+function isConservativePlacement(entry: FurnitureCatalogEntry): boolean {
+  return entry.isDesk || entry.category === 'chairs' || entry.category === 'storage';
+}
+
+function getPlacementInsets(footprintW: number, footprintH: number): { insetX: number; insetY: number } {
+  // Keep conservative categories fully blocked regardless of scale.
+  // entry thresholds mapped to effective footprint size.
+  // (desks/chairs/storage are handled by caller through no-inset policy.)
+  const insetX = footprintW >= 5 ? 2 : footprintW >= 3 ? 1 : 0;
+  const insetY = footprintH >= 5 ? 2 : footprintH >= 3 ? 1 : 0;
+  return { insetX, insetY };
+}
+
+function getItemPlacementInsets(
+  entry: FurnitureCatalogEntry,
+  footprintW: number,
+  footprintH: number,
+): { insetX: number; insetY: number } {
+  if (isConservativePlacement(entry)) return { insetX: 0, insetY: 0 };
+  return getPlacementInsets(footprintW, footprintH);
+}
+
+/** Placement-only collision tiles.
+ *  Keeps desks/chairs/storage conservative, while easing decor/wall/electronics overlap pressure. */
+export function getPlacementTiles(item: PlacedFurniture, entry: FurnitureCatalogEntry): Set<string> {
+  const tiles = new Set<string>();
+  const { footprintW, footprintH } = getFootprintForItem(item, entry);
+  const bgRows = entry.backgroundTiles || 0;
+  const { insetX, insetY } = getItemPlacementInsets(entry, footprintW, footprintH);
+
+  let dcStart = insetX;
+  let dcEnd = footprintW - 1 - insetX;
+  if (dcStart > dcEnd) {
+    const center = Math.floor((footprintW - 1) / 2);
+    dcStart = center;
+    dcEnd = center;
+  }
+
+  let drStart = Math.max(bgRows, insetY);
+  let drEnd = footprintH - 1 - insetY;
+  if (drStart > drEnd) {
+    const center = Math.min(footprintH - 1, Math.max(bgRows, Math.floor((footprintH - 1) / 2)));
+    drStart = center;
+    drEnd = center;
+  }
+
+  for (let dr = drStart; dr <= drEnd; dr++) {
+    for (let dc = dcStart; dc <= dcEnd; dc++) {
+      tiles.add(`${item.col + dc},${item.row + dr}`);
+    }
+  }
+  return tiles;
+}
+
 /** Get tiles blocked for placement purposes — skips top backgroundTiles rows per item */
 export function getPlacementBlockedTiles(
   furniture: PlacedFurniture[],
@@ -136,12 +222,9 @@ export function getPlacementBlockedTiles(
     if (item.uid === excludeUid) continue;
     const entry = getCatalogEntry(item.type);
     if (!entry) continue;
-    const bgRows = entry.backgroundTiles || 0;
-    for (let dr = 0; dr < entry.footprintH; dr++) {
-      if (dr < bgRows) continue; // skip background rows
-      for (let dc = 0; dc < entry.footprintW; dc++) {
-        tiles.add(`${item.col + dc},${item.row + dr}`);
-      }
+    const placementTiles = getPlacementTiles(item, entry);
+    for (const t of placementTiles) {
+      tiles.add(t);
     }
   }
   return tiles;
@@ -164,6 +247,47 @@ function orientationToFacing(orientation: string): Direction {
   }
 }
 
+function inferFacingFromType(type: string): Direction | null {
+  const upper = type.toUpperCase();
+  if (upper.includes('BACK')) return Direction.UP;
+  if (upper.includes('FRONT')) return Direction.DOWN;
+  if (upper.includes('LEFT')) return Direction.LEFT;
+  if (upper.includes('RIGHT') || upper.includes('SIDE') || upper.includes('REVERSED')) {
+    return Direction.RIGHT;
+  }
+  return null;
+}
+
+function inferFacingFromAdjacentDesks(
+  item: PlacedFurniture,
+  entry: { footprintW: number; footprintH: number; backgroundTiles?: number },
+  deskTiles: Set<string>,
+): Direction | null {
+  const startCol = item.col;
+  const endCol = item.col + entry.footprintW - 1;
+  const startRow = item.row + (entry.backgroundTiles ?? 0);
+  const endRow = item.row + entry.footprintH - 1;
+
+  const scores: Array<{ dir: Direction; score: number }> = [
+    { dir: Direction.UP, score: 0 },
+    { dir: Direction.DOWN, score: 0 },
+    { dir: Direction.LEFT, score: 0 },
+    { dir: Direction.RIGHT, score: 0 },
+  ];
+
+  for (let c = startCol; c <= endCol; c++) {
+    if (deskTiles.has(`${c},${startRow - 1}`)) scores[0].score++;
+    if (deskTiles.has(`${c},${endRow + 1}`)) scores[1].score++;
+  }
+  for (let r = startRow; r <= endRow; r++) {
+    if (deskTiles.has(`${startCol - 1},${r}`)) scores[2].score++;
+    if (deskTiles.has(`${endCol + 1},${r}`)) scores[3].score++;
+  }
+
+  scores.sort((a, b) => b.score - a.score);
+  return scores[0].score > 0 ? scores[0].dir : null;
+}
+
 /** Generate seats from chair furniture.
  *  Facing priority: 1) chair orientation, 2) adjacent desk, 3) forward (DOWN). */
 export function layoutToSeats(furniture: PlacedFurniture[]): Map<string, Seat> {
@@ -181,54 +305,38 @@ export function layoutToSeats(furniture: PlacedFurniture[]): Map<string, Seat> {
     }
   }
 
-  const dirs: Array<{ dc: number; dr: number; facing: Direction }> = [
-    { dc: 0, dr: -1, facing: Direction.UP }, // desk is above chair → face UP
-    { dc: 0, dr: 1, facing: Direction.DOWN }, // desk is below chair → face DOWN
-    { dc: -1, dr: 0, facing: Direction.LEFT }, // desk is left of chair → face LEFT
-    { dc: 1, dr: 0, facing: Direction.RIGHT }, // desk is right of chair → face RIGHT
-  ];
-
-  // For each chair, every footprint tile becomes a seat.
-  // Multi-tile chairs (e.g. 2-tile couches) produce multiple seats.
+  // Generate exactly one seat per chair for stable facing/placement.
   for (const item of furniture) {
     const entry = getCatalogEntry(item.type);
     if (!entry || entry.category !== 'chairs') continue;
-
-    let seatCount = 0;
     const bgRows = entry.backgroundTiles ?? 0;
-    for (let dr = bgRows; dr < entry.footprintH; dr++) {
-      for (let dc = 0; dc < entry.footprintW; dc++) {
-        const tileCol = item.col + dc;
-        const tileRow = item.row + dr;
 
-        // Determine facing direction:
-        // 1) Chair orientation takes priority
-        // 2) Adjacent desk direction
-        // 3) Default forward (DOWN)
-        let facingDir: Direction = Direction.DOWN;
-        if (entry.orientation) {
-          facingDir = orientationToFacing(entry.orientation);
-        } else {
-          for (const d of dirs) {
-            if (deskTiles.has(`${tileCol + d.dc},${tileRow + d.dr}`)) {
-              facingDir = d.facing;
-              break;
-            }
-          }
-        }
+    const seatAreaRows = Math.max(1, entry.footprintH - bgRows);
+    const baseSeatCol = item.col;
+    const baseSeatRow = item.row + bgRows;
+    const centerOffsetX = ((entry.footprintW - 1) * TILE_SIZE) / 2;
+    const centerOffsetY = ((seatAreaRows - 1) * TILE_SIZE) / 2;
 
-        // First seat uses chair uid (backward compat), subsequent use uid:N
-        const seatUid = seatCount === 0 ? item.uid : `${item.uid}:${seatCount}`;
-        seats.set(seatUid, {
-          uid: seatUid,
-          seatCol: tileCol,
-          seatRow: tileRow,
-          facingDir,
-          assigned: false,
-        });
-        seatCount++;
-      }
-    }
+    // Determine facing direction:
+    // 1) Adjacent desk side with strongest overlap
+    // 2) Chair orientation metadata
+    // 3) Type-name hint
+    // 4) Default DOWN
+    let facingDir: Direction = Direction.DOWN;
+    const deskFacing = inferFacingFromAdjacentDesks(item, entry, deskTiles);
+    const orientationFacing = entry.orientation ? orientationToFacing(entry.orientation) : null;
+    const typeFacing = inferFacingFromType(item.type);
+    facingDir = deskFacing ?? orientationFacing ?? typeFacing ?? Direction.DOWN;
+
+    seats.set(item.uid, {
+      uid: item.uid,
+      seatCol: baseSeatCol,
+      seatRow: baseSeatRow,
+      seatOffsetX: (item.offsetX || 0) + centerOffsetX,
+      seatOffsetY: (item.offsetY || 0) + centerOffsetY,
+      facingDir,
+      assigned: false,
+    });
   }
 
   return seats;
