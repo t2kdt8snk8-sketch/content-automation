@@ -12,3 +12,9 @@ __pycache__/
 *.egg-info/
 dist/
 claude-skills/
+content-automation/
+free-claude-code.bak/
+insta-analyzer/
+marketingskills/
+pixel-agents/
+viral-content-analyzer/

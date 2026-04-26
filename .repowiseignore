@@ -1,0 +1,14 @@
+**/.git/**
+**/node_modules/**
+**/.next/**
+**/dist/**
+**/build/**
+**/.turbo/**
+**/.cache/**
+**/.npm-cache/**
+**/.venv/**
+**/__pycache__/**
+**/*.pyc
+**/*.pyo
+**/coverage/**
+**/.DS_Store
