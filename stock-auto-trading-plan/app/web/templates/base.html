@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ title or "AI Investment Research" }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/app.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="site-logo" href="/dashboard">
+        <span class="site-logo-dot"></span>
+        AI Research
+      </a>
+      <nav class="site-nav">
+        <a href="/dashboard" {% if request.url.path == '/dashboard' or request.url.path == '/' %}class="active"{% endif %}>대시보드</a>
+        <a href="/candidates" {% if request.url.path.startswith('/candidates') or request.url.path.startswith('/memos') %}class="active"{% endif %}>후보</a>
+        <a href="/uploads" {% if request.url.path == '/uploads' %}class="active"{% endif %}>데이터</a>
+        <a href="/exports" {% if request.url.path == '/exports' %}class="active"{% endif %}>LEAN</a>
+      </nav>
+      <a class="site-logout" href="/logout">로그아웃</a>
+    </header>
+    <main class="main-content">
+      {% block content %}{% endblock %}
+    </main>
+  </body>
+</html>

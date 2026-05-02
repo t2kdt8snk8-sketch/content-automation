@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block content %}
+
+{# ===== STAT SUMMARY ===== #}
+<div class="stat-grid">
+  <div class="stat-card s-accent">
+    <div class="stat-label">감시 중</div>
+    <div class="stat-value">{{ watchlist_count }}</div>
+  </div>
+  <div class="stat-card {% if candidate_count > 0 %}s-accent{% endif %}">
+    <div class="stat-label">후보</div>
+    <div class="stat-value">{{ candidate_count }}</div>
+  </div>
+  <div class="stat-card {% if pending_count > 0 %}s-warning{% endif %}">
+    <div class="stat-label">승인 대기</div>
+    <div class="stat-value">{{ pending_count }}</div>
+  </div>
+  <div class="stat-card s-positive">
+    <div class="stat-label">의견서 총계</div>
+    <div class="stat-value">{{ memo_count }}</div>
+  </div>
+</div>
+
+{# ===== QUICK ACTIONS ===== #}
+<div class="quick-actions section-gap">
+  <form method="post" action="/run/collect">
+    <button class="primary">▶ 데이터 수집 + 후보 갱신</button>
+  </form>
+  <a class="btn ghost" href="/candidates">후보 검토 →</a>
+</div>
+
+{# ===== PIPELINE ===== #}
+<div class="card section-gap">
+  <div class="card-head">
+    <span class="card-title">자동 처리 흐름</span>
+    <span class="card-meta">장마감 후 루틴</span>
+  </div>
+  <div class="pipeline">
+    <div class="pipeline-step ps-active">
+      <div class="pipeline-num">01</div>
+      <div class="pipeline-name">데이터 수집</div>
+      <div class="pipeline-desc">자동 수집 + CSV 백업</div>
+    </div>
+    <div class="pipeline-step {% if candidate_count > 0 %}ps-done{% endif %}">
+      <div class="pipeline-num">02</div>
+      <div class="pipeline-name">후보 선별</div>
+      <div class="pipeline-desc">기본 모델 필터</div>
+    </div>
+    <div class="pipeline-step {% if memo_count > 0 %}ps-done{% endif %}">
+      <div class="pipeline-num">03</div>
+      <div class="pipeline-name">AI 의견서</div>
+      <div class="pipeline-desc">고정 양식 초안</div>
+    </div>
+    <div class="pipeline-step {% if pending_count > 0 %}ps-active{% endif %}">
+      <div class="pipeline-num">04</div>
+      <div class="pipeline-name">승인 대기</div>
+      <div class="pipeline-desc">자동 주문 없음</div>
+    </div>
+  </div>
+</div>
+
+{# ===== DETAIL GRID ===== #}
+<div class="dash-grid">
+
+  {# 최근 수집 #}
+  <div class="card">
+    <div class="card-head">
+      <span class="card-title">최근 수집</span>
+      <span class="card-meta">data run</span>
+    </div>
+    {% if latest_run %}
+      <div class="kv-row"><span class="kv-key">상태</span><span class="kv-val">{{ latest_run.status }}</span></div>
+      <div class="kv-row"><span class="kv-key">출처</span><span class="kv-val">{{ latest_run.source }}</span></div>
+      <div class="kv-row"><span class="kv-key">메시지</span><span class="kv-val">{{ latest_run.message }}</span></div>
+    {% else %}
+      <p class="empty-state">수집 기록 없음. 관심종목 추가 후 수집 실행.</p>
+    {% endif %}
+  </div>
+
+  {# 성과 요약 #}
+  <div class="card">
+    <div class="card-head">
+      <span class="card-title">10일 성과 요약</span>
+      <span class="card-meta">score tracking</span>
+    </div>
+    {% set avg = summary.average_return * 100 %}
+    {% set excess = summary.average_excess_return * 100 %}
+    <svg class="perf-chart" viewBox="0 0 420 140" role="img" aria-label="성과 차트">
+      <line x1="24" y1="100" x2="396" y2="100"></line>
+      <path class="c-soft" d="M28 102 C74 70 116 108 162 76 S248 44 300 78 352 118 392 50"></path>
+      <path class="c-main" d="M28 116 C74 86 116 98 162 84 S248 66 300 88 352 78 392 64"></path>
+      <circle cx="392" cy="64" r="7"></circle>
+    </svg>
+    <div class="bar-row">
+      <div class="bar-label">평균 수익 {{ "%.2f"|format(avg) }}%</div>
+      <div class="bar-track">
+        <div class="bar-fill {% if avg < 0 %}neg{% endif %}" style="width: {{ [avg|abs * 5, 100]|min }}%"></div>
+      </div>
+    </div>
+    <div class="bar-row">
+      <div class="bar-label">초과수익 {{ "%.2f"|format(excess) }}%</div>
+      <div class="bar-track">
+        <div class="bar-fill {% if excess < 0 %}neg{% endif %}" style="width: {{ [excess|abs * 5, 100]|min }}%"></div>
+      </div>
+    </div>
+    <div style="margin-top: 12px;">
+      <div class="kv-row"><span class="kv-key">표본</span><span class="kv-val">{{ summary.count }}</span></div>
+    </div>
+    <div style="margin-top: 12px;">
+      <form method="post" action="/run/performance">
+        <button>성과 업데이트</button>
+      </form>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

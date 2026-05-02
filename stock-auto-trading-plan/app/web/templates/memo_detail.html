@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+{% block content %}
+{% if not memo %}
+  <p class="error-msg" style="padding: 20px;">의견서를 찾을 수 없음.</p>
+{% else %}
+  {% set score = memo.total_score|int %}
+  {% if score >= 70 %}{% set sc = "sc-high" %}
+  {% elif score >= 50 %}{% set sc = "sc-mid" %}
+  {% else %}{% set sc = "sc-low" %}{% endif %}
+
+  {% set risk = memo.risk_status|lower %}
+  {% if risk == "ok" or risk == "low" %}{% set rb = "b-green" %}
+  {% elif risk == "medium" or risk == "watch" %}{% set rb = "b-yellow" %}
+  {% else %}{% set rb = "b-red" %}{% endif %}
+
+  {% set appr = memo.approval_status|lower %}
+  {% if appr == "approved" %}{% set ab = "b-green" %}
+  {% elif appr == "rejected" %}{% set ab = "b-red" %}
+  {% else %}{% set ab = "b-neutral" %}{% endif %}
+
+  {# ===== SUMMARY BANNER ===== #}
+  <div class="memo-banner">
+    <div class="memo-ticker-row">
+      <div>
+        <div class="memo-ticker">{{ memo.ticker }}</div>
+        <div class="memo-reco">{{ memo.recommendation }}</div>
+      </div>
+      <div class="memo-score-large {{ sc }}">{{ "%.0f"|format(memo.total_score) }}</div>
+    </div>
+    <div class="memo-meta-row">
+      <span class="badge b-neutral">{{ memo.as_of_date }}</span>
+      <span class="badge {{ rb }}">위험: {{ memo.risk_status }}</span>
+      <span class="badge {{ ab }}">{{ memo.approval_status }}</span>
+    </div>
+  </div>
+
+  {# ===== PRICE BAND QUICK VIEW ===== #}
+  <div class="card section-gap">
+    <div class="card-head">
+      <span class="card-title">판단 가격대</span>
+      <span class="card-meta">entry corridor</span>
+    </div>
+    <div class="price-band"></div>
+    <div class="price-points">
+      <div class="price-point">
+        <div class="price-dot pd-stop"></div>
+        <div class="price-plabel">손절</div>
+        <div class="price-pvalue">{{ "%.2f"|format(memo.stop_price) }}</div>
+      </div>
+      <div class="price-point">
+        <div class="price-dot"></div>
+        <div class="price-plabel">진입</div>
+        <div class="price-pvalue">{{ "%.2f"|format(memo.entry_price) }}</div>
+      </div>
+      <div class="price-point">
+        <div class="price-dot pd-review"></div>
+        <div class="price-plabel">재평가</div>
+        <div class="price-pvalue">{{ "%.2f"|format(memo.review_price) }}</div>
+      </div>
+    </div>
+  </div>
+
+  {# ===== TAB NAV ===== #}
+  <div class="memo-tabs" role="tablist">
+    <button class="memo-tab active" data-tab="scores">점수지도</button>
+    <button class="memo-tab" data-tab="details">상세</button>
+    <button class="memo-tab" data-tab="scenario">시나리오</button>
+    <button class="memo-tab" data-tab="reasons">근거</button>
+    <button class="memo-tab" data-tab="risk">위험</button>
+  </div>
+
+  {# === TAB: 점수지도 === #}
+  <div class="memo-tab-panel active" id="tab-scores">
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">점수 지도</span>
+        <span class="card-meta">fixed rubric</span>
+      </div>
+      <div class="radar-wrap">
+        <svg class="radar-chart" viewBox="0 0 320 280" role="img" aria-label="점수 레이더 차트">
+          <polygon class="radar-grid-line" points="160,24 284,104 236,238 84,238 36,104"></polygon>
+          <polygon class="radar-grid-line inner" points="160,72 238,122 208,204 112,204 82,122"></polygon>
+          <polygon class="radar-fill" points="160,48 250,116 222,210 98,218 68,108"></polygon>
+          <circle cx="160" cy="48" r="6"></circle>
+          <circle cx="250" cy="116" r="6"></circle>
+          <circle cx="222" cy="210" r="6"></circle>
+          <circle cx="98" cy="218" r="6"></circle>
+          <circle cx="68" cy="108" r="6"></circle>
+        </svg>
+      </div>
+      <div class="score-bars-list">
+        <div class="score-bar-row">
+          <span class="sbar-label">가격/추세</span>
+          <div class="score-bar-track"><div class="score-bar-fill" style="width: {{ [memo.score_price_trend * 5, 100]|min }}%"></div></div>
+          <span class="sbar-num">{{ memo.score_price_trend }}</span>
+        </div>
+        <div class="score-bar-row">
+          <span class="sbar-label">실적/재무</span>
+          <div class="score-bar-track"><div class="score-bar-fill" style="width: {{ [memo.score_fundamental * 5, 100]|min }}%"></div></div>
+          <span class="sbar-num">{{ memo.score_fundamental }}</span>
+        </div>
+        <div class="score-bar-row">
+          <span class="sbar-label">뉴스/이벤트</span>
+          <div class="score-bar-track"><div class="score-bar-fill" style="width: {{ [memo.score_news_event * 5, 100]|min }}%"></div></div>
+          <span class="sbar-num">{{ memo.score_news_event }}</span>
+        </div>
+        <div class="score-bar-row">
+          <span class="sbar-label">수급/거래량</span>
+          <div class="score-bar-track"><div class="score-bar-fill" style="width: {{ [memo.score_flow_volume * 6.67, 100]|min }}%"></div></div>
+          <span class="sbar-num">{{ memo.score_flow_volume }}</span>
+        </div>
+        <div class="score-bar-row">
+          <span class="sbar-label">손익비</span>
+          <div class="score-bar-track"><div class="score-bar-fill" style="width: {{ [memo.score_reward_risk * 4, 100]|min }}%"></div></div>
+          <span class="sbar-num">{{ memo.score_reward_risk }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# === TAB: 상세 === #}
+  <div class="memo-tab-panel" id="tab-details">
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">상세 정보</span>
+        <span class="card-meta">decision data</span>
+      </div>
+      <div class="kv-row"><span class="kv-key">확신도</span><span class="kv-val">{{ "%.0f"|format(memo.confidence) }}</span></div>
+      <div class="kv-row"><span class="kv-key">위험 상태</span><span class="kv-val">{{ memo.risk_status }}</span></div>
+      <div class="kv-row"><span class="kv-key">승인 상태</span><span class="kv-val">{{ memo.approval_status }}</span></div>
+      <div class="kv-row"><span class="kv-key">최대비중</span><span class="kv-val">{{ "%.1f"|format(memo.max_weight * 100) }}%</span></div>
+      <div class="kv-row"><span class="kv-key">보유 기간</span><span class="kv-val">{{ memo.holding_period }}</span></div>
+      <div class="kv-row"><span class="kv-key">손절가</span><span class="kv-val">{{ "%.2f"|format(memo.stop_price) }}</span></div>
+      <div class="kv-row"><span class="kv-key">진입가</span><span class="kv-val">{{ "%.2f"|format(memo.entry_price) }}</span></div>
+      <div class="kv-row"><span class="kv-key">재평가가</span><span class="kv-val">{{ "%.2f"|format(memo.review_price) }}</span></div>
+    </div>
+  </div>
+
+  {# === TAB: 시나리오 === #}
+  <div class="memo-tab-panel" id="tab-scenario">
+    <div class="scenario-grid">
+      <article class="scenario-card bull">
+        <div class="scenario-label">↑ 상승 시나리오</div>
+        <p class="scenario-text">{{ memo.bull_case }}</p>
+      </article>
+      <article class="scenario-card bear">
+        <div class="scenario-label">↓ 하락 시나리오</div>
+        <p class="scenario-text">{{ memo.bear_case }}</p>
+      </article>
+    </div>
+  </div>
+
+  {# === TAB: 근거 === #}
+  <div class="memo-tab-panel" id="tab-reasons">
+    <div class="card section-gap">
+      <div class="card-head">
+        <span class="card-title">핵심 근거</span>
+        <span class="card-meta">why it can work</span>
+      </div>
+      <ul class="insight-list">
+        {% for reason in key_reasons %}
+          <li>{{ reason }}</li>
+        {% else %}
+          <li>저장된 핵심 근거 없음.</li>
+        {% endfor %}
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">반대 근거</span>
+        <span class="card-meta">what can break</span>
+      </div>
+      <ul class="insight-list bad">
+        {% for reason in counter_reasons %}
+          <li>{{ reason }}</li>
+        {% else %}
+          <li>저장된 반대 근거 없음.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  {# === TAB: 위험 === #}
+  <div class="memo-tab-panel" id="tab-risk">
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">거래 금지 조건</span>
+        <span class="card-meta">risk gate</span>
+      </div>
+      <div class="risk-grid">
+        {% for item in do_not_trade %}
+          <span class="risk-tag">{{ item }}</span>
+        {% endfor %}
+        {% for item in risk_messages %}
+          <span class="risk-tag">{{ item }}</span>
+        {% endfor %}
+        {% if not do_not_trade and not risk_messages %}
+          <span style="color: var(--text-2); font-size: 14px;">별도 조건 없음</span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  {# ===== STICKY ACTIONS ===== #}
+  <div class="sticky-bar">
+    <form method="post" action="/memos/{{ memo.id }}/telegram">
+      <button>텔레그램</button>
+    </form>
+    <form method="post" action="/memos/{{ memo.id }}/decision">
+      <input type="hidden" name="decision" value="rejected">
+      <button class="ghost">거절</button>
+    </form>
+    <form method="post" action="/memos/{{ memo.id }}/decision">
+      <input type="hidden" name="decision" value="approved">
+      <button class="primary" {% if memo.risk_status == "blocked" %}disabled{% endif %}>
+        {% if memo.risk_status == "blocked" %}차단됨{% else %}승인 기록 ▶{% endif %}
+      </button>
+    </form>
+  </div>
+
+  <script>
+    (function() {
+      var tabs = document.querySelectorAll('.memo-tab');
+      var panels = document.querySelectorAll('.memo-tab-panel');
+      tabs.forEach(function(tab) {
+        tab.addEventListener('click', function() {
+          tabs.forEach(function(t) { t.classList.remove('active'); });
+          panels.forEach(function(p) { p.classList.remove('active'); });
+          tab.classList.add('active');
+          document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+        });
+      });
+    })();
+  </script>
+{% endif %}
+{% endblock %}

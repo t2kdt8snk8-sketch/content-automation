@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="page-header">
+  <p class="eyebrow">QuantConnect</p>
+  <h1 class="page-title">LEAN 내보내기</h1>
+  <p class="page-lede">승인된 의견서만 LEAN이 읽을 수 있는 CSV로 뽑는다. 실제 주문 연결은 다음 단계에서 붙인다.</p>
+</div>
+
+<div class="export-summary">
+  <div class="export-count">CSV</div>
+  <div class="export-label">승인된 의견서 → LEAN 신호 파일</div>
+</div>
+
+<div style="margin-bottom: 16px;">
+  <a class="btn primary" href="/exports/lean.csv" style="font-size: 16px; min-height: 52px;">
+    lean_signals.csv 다운로드 ↓
+  </a>
+</div>
+
+<div class="card-head" style="margin-bottom: 8px;">
+  <span class="card-title">파이프라인</span>
+  <span class="card-meta">approved only</span>
+</div>
+
+<div class="pipeline section-gap" style="grid-template-columns: repeat(3, 1fr);">
+  <div class="pipeline-step ps-done">
+    <div class="pipeline-num">01</div>
+    <div class="pipeline-name">AI 의견서</div>
+    <div class="pipeline-desc">생성 완료</div>
+  </div>
+  <div class="pipeline-step ps-done">
+    <div class="pipeline-num">02</div>
+    <div class="pipeline-name">사람 승인</div>
+    <div class="pipeline-desc">최종 결정 기록</div>
+  </div>
+  <div class="pipeline-step ps-active">
+    <div class="pipeline-num">03</div>
+    <div class="pipeline-name">LEAN CSV</div>
+    <div class="pipeline-desc">여기서 다운로드</div>
+  </div>
+</div>
+
+<div class="terminal-card">
+  <div class="terminal-dots">
+    <span></span><span></span><span></span>
+  </div>
+  <pre>ticker,weight,entry,stop,review
+AAPL,0.05,196.40,188.20,211.00
+MSFT,0.04,412.10,398.80,437.50</pre>
+</div>
+
+{% endblock %}
