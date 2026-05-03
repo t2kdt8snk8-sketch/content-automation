@@ -2,44 +2,39 @@
 <html lang="ko">
   <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>로그인 — AI Investment Research</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#07090a">
+    <title>로그인 — AI 투자 리서치</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/app.css">
   </head>
   <body>
     <div class="login-page">
       <div class="login-card">
-        <section class="login-visual" aria-hidden="true">
-          <div class="login-mini-grid">
-            <span class="login-tile lt1"></span>
-            <span class="login-tile lt2"></span>
-            <span class="login-tile lt3"></span>
-            <span class="login-tile lt4"></span>
-            <span class="login-tile lt5"></span>
-            <span class="login-tile lt6"></span>
+        <div class="login-mark">
+          <span class="dot"></span>
+          <span class="name">AI Research</span>
+        </div>
+        <p class="login-eyebrow">투자 리서치 데스크</p>
+        <h1 class="login-title">사람 승인 후 LEAN 으로</h1>
+        <p class="login-sub">자동 수집 · AI 의견서 · 사람 승인 흐름을 한 화면에서 관리합니다.</p>
+
+        <div class="login-flow">
+          <div class="login-flow-step"><span class="n">1</span><span>관심종목 자동 수집</span></div>
+          <div class="login-flow-step"><span class="n">2</span><span>AI 의견서 + 수학 검증</span></div>
+          <div class="login-flow-step"><span class="n">3</span><span>사람 승인 → LEAN CSV</span></div>
+        </div>
+
+        <form class="login-form" method="post" action="/login">
+          <div>
+            <label for="pw">관리 비밀번호</label>
+            <input id="pw" type="password" name="password" autocomplete="current-password" required autofocus>
           </div>
-          <svg class="login-chart" viewBox="0 0 360 120" role="img" aria-label="차트">
-            <path d="M10 86 C58 42 84 66 126 52 S196 32 238 58 302 76 350 28"></path>
-            <circle cx="238" cy="58" r="7"></circle>
-            <circle cx="350" cy="28" r="7"></circle>
-          </svg>
-        </section>
-        <section class="login-form-wrap">
-          <p class="login-eyebrow">AI Stock Research Desk</p>
-          <h1 class="login-title">투자 보조 시스템</h1>
-          <p class="login-sub">자동 수집, AI 의견서, 사람 승인 흐름을 한 화면에서 관리.</p>
-          <form class="login-form" method="post" action="/login">
-            <div>
-              <label for="pw">관리 비밀번호</label>
-              <input id="pw" type="password" name="password" autocomplete="current-password" required>
-            </div>
-            {% if error %}<p class="error-msg">{{ error }}</p>{% endif %}
-            <button type="submit" class="primary">로그인</button>
-          </form>
-        </section>
+          {% if error %}<p class="error-msg">{{ error }}</p>{% endif %}
+          <button type="submit" class="primary">로그인</button>
+        </form>
       </div>
     </div>
   </body>

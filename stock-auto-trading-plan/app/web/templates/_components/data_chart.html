@@ -1,0 +1,108 @@
+{# ===== line_chart =====
+   values: list of numeric (price-like) — auto-normalized
+   height: int px
+   color: 'mint' (default), 'info', 'warn', 'neg'
+#}
+{% macro line_chart(values, height=80, color='mint', width=400) -%}
+  {%- set vs = values | default([]) | list -%}
+  {%- if vs | length < 2 -%}
+    <div class="dc-empty">데이터 부족</div>
+  {%- else -%}
+    {%- set vmin = vs | min -%}
+    {%- set vmax = vs | max -%}
+    {%- set span = vmax - vmin -%}
+    {%- if span == 0 -%}{%- set span = 1 -%}{%- endif -%}
+    {%- set step = (width - 8) / ((vs | length) - 1) -%}
+    {%- set h = height - 8 -%}
+    {%- set points = [] -%}
+    {%- for v in vs -%}
+      {%- set x = 4 + loop.index0 * step -%}
+      {%- set y = 4 + h - ((v - vmin) / span) * h -%}
+      {%- set _ = points.append((x, y)) -%}
+    {%- endfor -%}
+    {%- set last_x = points[-1][0] -%}
+    {%- set last_y = points[-1][1] -%}
+    <svg class="dc-line" viewBox="0 0 {{ width }} {{ height }}" preserveAspectRatio="none" role="img" aria-label="추이 차트">
+      <line class="baseline" x1="0" x2="{{ width }}" y1="{{ height / 2 }}" y2="{{ height / 2 }}"/>
+      <path class="area" d="M {{ '%.1f' % points[0][0] }} {{ height }} {%- for p in points %} L {{ '%.1f' % p[0] }} {{ '%.1f' % p[1] }}{%- endfor %} L {{ '%.1f' % last_x }} {{ height }} Z"/>
+      <path class="line" d="M {%- for p in points %} {%- if loop.first %} {{ '%.1f' % p[0] }} {{ '%.1f' % p[1] }} {%- else %} L {{ '%.1f' % p[0] }} {{ '%.1f' % p[1] }} {%- endif -%} {%- endfor %}"/>
+      <circle class="last-dot" cx="{{ '%.1f' % last_x }}" cy="{{ '%.1f' % last_y }}" r="3"/>
+    </svg>
+  {%- endif -%}
+{%- endmacro %}
+
+
+{# ===== sparkline ===== compact, no axis #}
+{% macro sparkline(values, height=32, width=120) -%}
+  {%- set vs = values | default([]) | list -%}
+  {%- if vs | length < 2 -%}
+    <div class="dc-empty" style="padding: 6px;">—</div>
+  {%- else -%}
+    {%- set vmin = vs | min -%}
+    {%- set vmax = vs | max -%}
+    {%- set span = vmax - vmin -%}
+    {%- if span == 0 -%}{%- set span = 1 -%}{%- endif -%}
+    {%- set step = width / ((vs | length) - 1) -%}
+    {%- set h = height - 4 -%}
+    <svg class="dc-sparkline" viewBox="0 0 {{ width }} {{ height }}" preserveAspectRatio="none">
+      <path class="line" d="{%- for v in vs -%}{%- set x = loop.index0 * step -%}{%- set y = 2 + h - ((v - vmin) / span) * h -%}{%- if loop.first %}M {{ '%.1f' % x }} {{ '%.1f' % y }}{%- else %} L {{ '%.1f' % x }} {{ '%.1f' % y }}{%- endif -%}{%- endfor -%}"/>
+    </svg>
+  {%- endif -%}
+{%- endmacro %}
+
+
+{# ===== bars ===== rows: list[{label, value, max, color?}] #}
+{% macro bars(rows) -%}
+  {%- if not rows -%}
+    <div class="dc-empty">데이터 없음</div>
+  {%- else -%}
+    <div class="dc-bars">
+      {%- for row in rows -%}
+        {%- set m = row.max | default(100) -%}
+        {%- set pct = ((row.value | float / m * 100) if m else 0) -%}
+        {%- if pct > 100 -%}{%- set pct = 100 -%}{%- elif pct < 0 -%}{%- set pct = 0 -%}{%- endif -%}
+        <div class="dc-bar-row">
+          <span class="dc-bar-label">{{ row.label }}</span>
+          <div class="dc-bar-track"><div class="dc-bar-fill {{ row.color | default('') }}" style="width: {{ '%.1f' % pct }}%"></div></div>
+          <span class="dc-bar-num">{{ row.display | default(row.value) }}</span>
+        </div>
+      {%- endfor -%}
+    </div>
+  {%- endif -%}
+{%- endmacro %}
+
+
+{# ===== radar =====
+   axes: list[{label, value, max}]. Plots regular polygon for n>=3.
+   Uses `polar` global registered in templates env (Python-side trig).
+#}
+{% macro radar(axes, size=240) -%}
+  {%- set n = axes | length -%}
+  {%- if n < 3 -%}
+    <div class="dc-empty">레이더 데이터 부족</div>
+  {%- else -%}
+    {%- set cx = size / 2 -%}
+    {%- set cy = size / 2 -%}
+    {%- set r = size / 2 - 24 -%}
+    <svg class="dc-radar" viewBox="0 0 {{ size }} {{ size }}" role="img" aria-label="점수 레이더 차트">
+      <polygon class="grid outer" points="{%- for ax in axes -%}{%- set p = polar(cx, cy, r, loop.index0, n) -%}{{ '%.1f' % p[0] }},{{ '%.1f' % p[1] }} {%- endfor -%}"/>
+      <polygon class="grid" points="{%- for ax in axes -%}{%- set p = polar(cx, cy, r * 0.5, loop.index0, n) -%}{{ '%.1f' % p[0] }},{{ '%.1f' % p[1] }} {%- endfor -%}"/>
+      {%- for ax in axes -%}
+        {%- set p = polar(cx, cy, r, loop.index0, n) -%}
+        <line class="axis" x1="{{ cx }}" y1="{{ cy }}" x2="{{ '%.1f' % p[0] }}" y2="{{ '%.1f' % p[1] }}"/>
+      {%- endfor -%}
+      <polygon class="area" points="{%- for ax in axes -%}{%- set m = ax.max | default(20) -%}{%- set ratio = (ax.value | float / m) if m else 0 -%}{%- if ratio > 1 -%}{%- set ratio = 1 -%}{%- elif ratio < 0 -%}{%- set ratio = 0 -%}{%- endif -%}{%- set p = polar(cx, cy, r * ratio, loop.index0, n) -%}{{ '%.1f' % p[0] }},{{ '%.1f' % p[1] }} {%- endfor -%}"/>
+      {%- for ax in axes -%}
+        {%- set m = ax.max | default(20) -%}
+        {%- set ratio = (ax.value | float / m) if m else 0 -%}
+        {%- if ratio > 1 -%}{%- set ratio = 1 -%}{%- elif ratio < 0 -%}{%- set ratio = 0 -%}{%- endif -%}
+        {%- set p = polar(cx, cy, r * ratio, loop.index0, n) -%}
+        <circle class="point" cx="{{ '%.1f' % p[0] }}" cy="{{ '%.1f' % p[1] }}" r="2.5"/>
+      {%- endfor -%}
+      {%- for ax in axes -%}
+        {%- set p = polar(cx, cy, r + 14, loop.index0, n) -%}
+        <text x="{{ '%.1f' % p[0] }}" y="{{ '%.1f' % p[1] }}" text-anchor="middle" dominant-baseline="middle">{{ ax.label }}</text>
+      {%- endfor -%}
+    </svg>
+  {%- endif -%}
+{%- endmacro %}

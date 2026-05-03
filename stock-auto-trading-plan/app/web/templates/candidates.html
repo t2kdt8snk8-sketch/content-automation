@@ -1,65 +1,65 @@
 {% extends "base.html" %}
+{% from "_components/empty_state.html" import empty_state %}
 {% block content %}
 
 <div class="page-header">
   <p class="eyebrow">Signal Review</p>
   <h1 class="page-title">후보 종목</h1>
-  <p class="page-lede">기본 모델이 먼저 고른 종목. 여기서 AI 의견서를 생성하면 근거, 반대 근거, 위험 조건까지 고정 양식으로 나온다.</p>
+  <p class="page-lede">기본 모델이 먼저 고른 종목입니다. 카드를 펼치면 사유와 액션이 나타납니다.</p>
 </div>
 
-<div class="candidate-list">
-  {% for item in items %}
-    {% set score = item.baseline_score|int %}
-    {% if score >= 70 %}{% set sc = "sc-high" %}
-    {% elif score >= 50 %}{% set sc = "sc-mid" %}
-    {% else %}{% set sc = "sc-low" %}{% endif %}
+{# Filter bar #}
+<div class="flex gap-8 wrap mb-12 items-center">
+  <div class="toggle-group">
+    <a class="toggle-btn {% if sort == 'date' %}is-active{% endif %}" href="?sort=date">최신순</a>
+    <a class="toggle-btn {% if sort == 'score' %}is-active{% endif %}" href="?sort=score">점수순</a>
+    <a class="toggle-btn {% if sort == 'risk' %}is-active{% endif %}" href="?sort=risk">위험순</a>
+  </div>
+  <span class="muted fs-12">{{ cards | length }}개</span>
+</div>
 
-    {% set risk = item.risk_status|lower %}
-    {% if risk == "ok" or risk == "low" %}{% set rb = "b-green" %}
-    {% elif risk == "medium" or risk == "watch" %}{% set rb = "b-yellow" %}
-    {% else %}{% set rb = "b-red" %}{% endif %}
-
-    <article class="candidate-card">
-      <div class="candidate-header">
-        <div>
-          <div class="ticker">{{ item.ticker }}</div>
-          <div class="candidate-date">{{ item.as_of_date }}</div>
-        </div>
-        <div class="score-badge {{ sc }}">{{ "%.0f"|format(item.baseline_score) }}</div>
-      </div>
-
-      <svg class="sparkline" viewBox="0 0 320 80" role="img" aria-label="점수 시각화">
-        <path class="spark-bg" d="M12 56 C48 34 74 58 106 30 S168 10 206 38 260 62 308 14"></path>
-        <path class="spark-main" d="M12 62 C48 50 74 54 106 42 S168 30 206 44 260 38 308 26"></path>
-        <circle cx="308" cy="26" r="5"></circle>
-      </svg>
-
-      <div class="score-bar-track">
-        <div class="score-bar-fill {{ sc }}" style="width: {{ [score, 100]|min }}%"></div>
-      </div>
-
-      <p class="candidate-reason" style="margin-top: 12px;">{{ item.candidate_reason }}</p>
-
-      <div class="candidate-badges">
-        <span class="badge {{ rb }}">위험: {{ item.risk_status }}</span>
-        <span class="badge b-neutral">기본 모델</span>
-        <span class="badge b-neutral">의견서 가능</span>
-      </div>
-
-      <div class="candidate-actions">
-        <form method="post" action="/candidates/{{ item.id }}/memo">
-          <button class="primary">AI 의견서 생성</button>
-        </form>
-        {% if item.memos %}
-          <a class="btn ghost" href="/memos/{{ item.memos[-1].id }}">최근 의견서 →</a>
-        {% endif %}
-      </div>
-    </article>
+{% if not cards %}
+  {% if diagnose %}
+    {{ empty_state(diagnose[0], desc=diagnose[1], cta_label='해결하러 →', cta_href=diagnose[2], emoji='∅') }}
   {% else %}
-    <div class="empty-state">
-      <strong>후보 없음</strong><br>
-      대시보드에서 데이터 수집/후보 갱신을 먼저 실행.
-    </div>
-  {% endfor %}
-</div>
+    {{ empty_state('후보 없음', desc='데이터 수집 후 다시 확인하세요.', cta_label='대시보드 →', cta_href='/dashboard') }}
+  {% endif %}
+{% else %}
+  <div class="candidate-list">
+    {% for card in cards %}
+      {% set c = card.candidate %}
+      {% set tier = card.score_tier %}
+      <article class="candidate-card" data-collapsible="cand-{{ c.id }}" data-candidate-card>
+        <button type="button" class="collapsible-head candidate-head">
+          <div class="candidate-head-main">
+            <span class="ticker">{{ c.ticker }}</span>
+            <span class="candidate-date">{{ c.as_of_date }}</span>
+            <span class="badge {% if c.risk_status == 'blocked' %}b-neg{% elif c.risk_status in ['warning'] %}b-warn{% else %}b-mint{% endif %}">{{ c.risk_status }}</span>
+            {% if card.latest_memo %}
+              {% set m = card.latest_memo %}
+              <span class="badge {% if m.approval_status == 'approved' %}b-mint{% elif m.approval_status == 'rejected' %}b-neg{% else %}b-info{% endif %}">의견서: {{ m.approval_status }}</span>
+            {% endif %}
+          </div>
+          <span class="score-badge sc-{{ tier }} tnum">{{ "%.0f"|format(c.baseline_score) }}</span>
+          <span class="collapsible-affordance" aria-hidden="true">
+            <svg width="14" height="14" viewBox="0 0 14 14"><path d="M3 5 L7 9 L11 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+        </button>
+        <div class="collapsible-body"><div class="inner"><div class="candidate-body">
+          <p class="candidate-reason">{{ c.candidate_reason or '사유 없음' }}</p>
+          <div class="score-bar-track"><div class="score-bar-fill sc-{{ tier }}" style="width: {{ [c.baseline_score, 100]|min }}%"></div></div>
+          <div class="candidate-actions">
+            {% if card.latest_memo %}
+              <a class="btn primary" href="/memos/{{ card.latest_memo.id }}">의견서 보기 →</a>
+              <button type="button" data-generate-memo="{{ c.id }}" class="ghost">새 의견서 생성</button>
+            {% else %}
+              <button type="button" data-generate-memo="{{ c.id }}" class="primary">AI 의견서 생성</button>
+            {% endif %}
+          </div>
+        </div></div></div>
+      </article>
+    {% endfor %}
+  </div>
+{% endif %}
+
 {% endblock %}

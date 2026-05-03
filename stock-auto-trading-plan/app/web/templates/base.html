@@ -2,14 +2,18 @@
 <html lang="ko">
   <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ title or "AI Investment Research" }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#07090a">
+    <title>{{ title or "AI 투자 리서치" }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/app.css">
+    {% if flash %}
+      <meta name="toast" content="{{ flash.message }}" data-type="{{ flash.type | default('ok') }}">
+    {% endif %}
   </head>
-  <body>
+  <body{% if run_running %} data-run-running="1"{% endif %}>
     <header class="site-header">
       <a class="site-logo" href="/dashboard">
         <span class="site-logo-dot"></span>
@@ -18,13 +22,31 @@
       <nav class="site-nav">
         <a href="/dashboard" {% if request.url.path == '/dashboard' or request.url.path == '/' %}class="active"{% endif %}>대시보드</a>
         <a href="/candidates" {% if request.url.path.startswith('/candidates') or request.url.path.startswith('/memos') %}class="active"{% endif %}>후보</a>
-        <a href="/uploads" {% if request.url.path == '/uploads' %}class="active"{% endif %}>데이터</a>
-        <a href="/exports" {% if request.url.path == '/exports' %}class="active"{% endif %}>LEAN</a>
+        <a href="/uploads" {% if request.url.path.startswith('/uploads') or request.url.path == '/watchlist' %}class="active"{% endif %}>데이터</a>
+        <a href="/exports" {% if request.url.path.startswith('/exports') %}class="active"{% endif %}>LEAN</a>
+        <a href="/operations" {% if request.url.path.startswith('/operations') or request.url.path.startswith('/models') %}class="active"{% endif %}>운영</a>
       </nav>
+      {% if scheduler_on is defined %}
+        <div class="site-state {% if scheduler_on %}is-on{% endif %}" title="{% if scheduler_on %}자동 모드 ON{% else %}자동 모드 OFF{% endif %}">
+          <span class="dot"></span>
+          <span>자동</span>
+        </div>
+      {% endif %}
       <a class="site-logout" href="/logout">로그아웃</a>
     </header>
     <main class="main-content">
       {% block content %}{% endblock %}
     </main>
+    {% if data_reliability %}
+      <footer class="site-footer">
+        <div class="reliability {% if data_reliability.status == 'paper_trading_ok' %}ok{% else %}warn{% endif %}">
+          <span class="dot"></span>
+          데이터 신뢰도: {{ data_reliability.status }}
+        </div>
+        <div class="muted">© AI 투자 리서치 — 사람 승인 후에만 LEAN 신호 생성</div>
+      </footer>
+    {% endif %}
+    <div id="toast-stack" class="toast-stack"></div>
+    <script src="/static/app.js"></script>
   </body>
 </html>

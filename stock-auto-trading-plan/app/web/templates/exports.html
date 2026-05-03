@@ -1,53 +1,48 @@
 {% extends "base.html" %}
+{% from "_components/empty_state.html" import empty_state %}
 {% block content %}
 
 <div class="page-header">
   <p class="eyebrow">QuantConnect</p>
   <h1 class="page-title">LEAN 내보내기</h1>
-  <p class="page-lede">승인된 의견서만 LEAN이 읽을 수 있는 CSV로 뽑는다. 실제 주문 연결은 다음 단계에서 붙인다.</p>
+  <p class="page-lede">사람이 승인한 의견서만 LEAN이 읽을 수 있는 CSV로 추출합니다. 신호에는 결정 모드, 유니버스, 10일 기준 기간이 함께 포함됩니다.</p>
 </div>
 
-<div class="export-summary">
-  <div class="export-count">CSV</div>
-  <div class="export-label">승인된 의견서 → LEAN 신호 파일</div>
-</div>
-
-<div style="margin-bottom: 16px;">
-  <a class="btn primary" href="/exports/lean.csv" style="font-size: 16px; min-height: 52px;">
-    lean_signals.csv 다운로드 ↓
-  </a>
-</div>
-
-<div class="card-head" style="margin-bottom: 8px;">
-  <span class="card-title">파이프라인</span>
-  <span class="card-meta">approved only</span>
-</div>
-
-<div class="pipeline section-gap" style="grid-template-columns: repeat(3, 1fr);">
-  <div class="pipeline-step ps-done">
-    <div class="pipeline-num">01</div>
-    <div class="pipeline-name">AI 의견서</div>
-    <div class="pipeline-desc">생성 완료</div>
+{% if approved_count == 0 %}
+  {{ empty_state('승인된 의견서 없음', desc='후보 검토 후 의견서를 승인하면 LEAN으로 내보낼 수 있습니다.', cta_label='후보 검토 →', cta_href='/candidates') }}
+{% else %}
+  <div class="export-summary">
+    <div class="export-count tnum">{{ approved_count }}</div>
+    <div class="export-label">승인된 의견서 → LEAN 신호</div>
+    <div class="export-meta">
+      <span>평균 점수 <span class="v tnum">{{ "%.0f"|format(avg_score) }}</span></span>
+      <span>평균 비중 <span class="v tnum">{{ "%.1f%%"|format(avg_weight * 100) }}</span></span>
+    </div>
   </div>
-  <div class="pipeline-step ps-done">
-    <div class="pipeline-num">02</div>
-    <div class="pipeline-name">사람 승인</div>
-    <div class="pipeline-desc">최종 결정 기록</div>
-  </div>
-  <div class="pipeline-step ps-active">
-    <div class="pipeline-num">03</div>
-    <div class="pipeline-name">LEAN CSV</div>
-    <div class="pipeline-desc">여기서 다운로드</div>
-  </div>
-</div>
 
-<div class="terminal-card">
-  <div class="terminal-dots">
-    <span></span><span></span><span></span>
+  <div class="row-gap mb-12">
+    <a class="btn primary" href="/exports/lean.csv">lean_signals.csv 다운로드 ↓</a>
   </div>
-  <pre>ticker,weight,entry,stop,review
-AAPL,0.05,196.40,188.20,211.00
-MSFT,0.04,412.10,398.80,437.50</pre>
-</div>
+
+  <section class="collapsible" data-collapsible="export-preview">
+    <button type="button" class="collapsible-head">
+      <div class="collapsible-head-main">
+        <span class="collapsible-title">CSV 미리보기</span>
+        <span class="collapsible-summary">상위 {{ (preview_rows | length - 1) if preview_rows | length > 0 else 0 }}행</span>
+      </div>
+      <span class="collapsible-affordance" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M3 5 L7 9 L11 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+    </button>
+    <div class="collapsible-body"><div class="inner"><div class="collapsible-body-inner">
+      {% if preview_rows %}
+        <div class="terminal-card">
+          <pre>{% for row in preview_rows %}<span class="{% if loop.first %}head{% endif %}">{{ row | join(',') }}</span>
+{% endfor %}</pre>
+        </div>
+      {% else %}
+        <p class="muted fs-12">미리보기 생성 실패</p>
+      {% endif %}
+    </div></div></div>
+  </section>
+{% endif %}
 
 {% endblock %}

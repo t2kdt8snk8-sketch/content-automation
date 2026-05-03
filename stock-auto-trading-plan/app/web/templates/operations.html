@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+{% from "_components/empty_state.html" import empty_state %}
+{% block content %}
+
+<div class="page-header">
+  <p class="eyebrow">Operations</p>
+  <h1 class="page-title">자동화 · 모델 · 연결</h1>
+  <p class="page-lede">평소엔 닫혀 있는 깊은 운영 정보. 카드를 펼치면 세부와 행 단위 로그까지 도달합니다.</p>
+</div>
+
+{# ============ SCHEDULER ============ #}
+<section class="collapsible" data-collapsible="ops-scheduler" id="ops-scheduler">
+  <button type="button" class="collapsible-head">
+    <div class="collapsible-head-main">
+      <span class="collapsible-title">자동 스케줄러 {% if scheduler_on %}<span class="badge b-mint">ON</span>{% else %}<span class="badge b-neutral">OFF</span>{% endif %}</span>
+      <span class="collapsible-summary">다음 실행 {{ next_run_label }}{% if latest_runs %} · 마지막 {{ latest_runs[0].status }}{% endif %}</span>
+    </div>
+    <span class="collapsible-affordance" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M3 5 L7 9 L11 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+  </button>
+  <div class="collapsible-body"><div class="inner"><div class="collapsible-body-inner">
+    <div class="kv-row"><span class="kv-key">자동 모드</span><span class="kv-val">{{ 'ON' if scheduler_on else 'OFF' }}</span></div>
+    <div class="kv-row"><span class="kv-key">다음 실행</span><span class="kv-val tnum">{{ next_run_label }}</span></div>
+
+    <div class="card-head mt-12 mb-8"><span class="card-title">최근 실행 5건</span><span class="card-meta">recent runs</span></div>
+    {% if latest_runs %}
+      <div class="row-gap">
+        {% for run in latest_runs %}
+          <div class="expand-row" data-expand-row>
+            <div class="expand-row-main">
+              <span class="muted fs-12 tnum">{{ run.started_at.strftime('%m-%d %H:%M') }}</span>
+              <span class="badge {% if run.status == 'success' %}b-mint{% elif run.status == 'running' %}b-info{% else %}b-warn{% endif %}">{{ run.status }}</span>
+              <span class="muted fs-12">{{ run.run_type }} / {{ run.source }}</span>
+            </div>
+            <span class="expand-row-icon">▾</span>
+          </div>
+          <div class="expand-row-detail"><div class="inner"><div class="expand-row-detail-inner">
+            <div class="kv-row"><span class="kv-key">시작</span><span class="kv-val tnum">{{ run.started_at.strftime('%Y-%m-%d %H:%M:%S') }}</span></div>
+            <div class="kv-row"><span class="kv-key">종료</span><span class="kv-val tnum">{{ run.finished_at.strftime('%Y-%m-%d %H:%M:%S') if run.finished_at else '미완료' }}</span></div>
+            <div class="kv-row"><span class="kv-key">메시지</span><span class="kv-val" style="text-align: left; max-width: 100%;">{{ run.message or '— 없음' }}</span></div>
+          </div></div></div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="muted fs-12">실행 기록이 없습니다.</p>
+    {% endif %}
+
+    <div class="mt-12">
+      <form data-run-collect method="post" action="/run/collect">
+        <button class="primary" type="submit" data-label="수동 실행 ▶">수동 실행 ▶</button>
+      </form>
+    </div>
+  </div></div></div>
+</section>
+
+{# ============ MODEL LAB ============ #}
+<section class="collapsible" data-collapsible="ops-models" id="ops-models">
+  <button type="button" class="collapsible-head">
+    <div class="collapsible-head-main">
+      <span class="collapsible-title">모델 랩</span>
+      <span class="collapsible-summary">활성: {{ active_model.model_version if active_model else '— 없음' }} / 후보 {{ candidate_models | length }}개</span>
+    </div>
+    <span class="collapsible-affordance" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M3 5 L7 9 L11 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+  </button>
+  <div class="collapsible-body"><div class="inner"><div class="collapsible-body-inner">
+    {% if active_model %}
+      <div class="card-head mb-8"><span class="card-title">활성 모델</span><span class="badge b-mint">paper_active</span></div>
+      <div class="kv-row"><span class="kv-key">버전</span><span class="kv-val">{{ active_model.model_version }}</span></div>
+      <div class="kv-row"><span class="kv-key">학습 시각</span><span class="kv-val tnum">{{ active_model.trained_at.strftime('%Y-%m-%d %H:%M') }}</span></div>
+      <div class="kv-row"><span class="kv-key">표본 수</span><span class="kv-val tnum">{{ active_model.training_sample_count }}</span></div>
+      {% if active_metrics %}
+        {% if active_metrics.brier is defined %}
+          <div class="kv-row"><span class="kv-key">Brier</span><span class="kv-val tnum">{{ "%.4f"|format(active_metrics.brier) }}</span></div>
+          <div class="kv-row"><span class="kv-key">log loss</span><span class="kv-val tnum">{{ "%.4f"|format(active_metrics.log_loss) }}</span></div>
+          <div class="kv-row"><span class="kv-key">ECE</span><span class="kv-val tnum">{{ "%.4f"|format(active_metrics.expected_calibration_error) }}</span></div>
+        {% endif %}
+      {% endif %}
+    {% else %}
+      <p class="muted fs-12 mb-12">활성 모델이 없습니다. 후보 모델 중 하나를 승급하세요.</p>
+    {% endif %}
+
+    <div class="card-head mt-12 mb-8"><span class="card-title">후보 모델</span><span class="card-meta">candidate</span></div>
+    {% if candidate_models %}
+      <div class="row-gap">
+        {% for cm in candidate_models %}
+          <div class="expand-row" data-expand-row>
+            <div class="expand-row-main">
+              <span style="font-weight: 600;">{{ cm.model.model_version }}</span>
+              <span class="muted fs-12 tnum">표본 {{ cm.model.training_sample_count }}</span>
+              {% if cm.metrics.brier is defined %}
+                <span class="badge b-info">Brier {{ "%.3f"|format(cm.metrics.brier) }}</span>
+              {% endif %}
+            </div>
+            <span class="expand-row-icon">▾</span>
+          </div>
+          <div class="expand-row-detail"><div class="inner"><div class="expand-row-detail-inner">
+            <div class="kv-row"><span class="kv-key">학습 시각</span><span class="kv-val tnum">{{ cm.model.trained_at.strftime('%Y-%m-%d %H:%M:%S') }}</span></div>
+            {% if cm.metrics.brier is defined %}
+              <div class="kv-row"><span class="kv-key">Brier</span><span class="kv-val tnum">{{ "%.4f"|format(cm.metrics.brier) }}</span></div>
+              <div class="kv-row"><span class="kv-key">log loss</span><span class="kv-val tnum">{{ "%.4f"|format(cm.metrics.log_loss) }}</span></div>
+              <div class="kv-row"><span class="kv-key">ECE</span><span class="kv-val tnum">{{ "%.4f"|format(cm.metrics.expected_calibration_error) }}</span></div>
+            {% else %}
+              <div class="kv-row"><span class="kv-key">메트릭</span><span class="kv-val muted">— 없음</span></div>
+            {% endif %}
+            <form method="post" action="/models/{{ cm.model.id }}/promote" class="mt-8">
+              <button type="submit" class="primary sm">활성으로 승급</button>
+            </form>
+          </div></div></div>
+        {% endfor %}
+      </div>
+    {% else %}
+      {{ empty_state('후보 모델 없음', desc='학습 표본이 30개 이상 모이면 자동으로 후보 모델이 등록됩니다.', cta_label='', cta_href='') }}
+    {% endif %}
+  </div></div></div>
+</section>
+
+{# ============ TELEGRAM ============ #}
+<section class="collapsible" data-collapsible="ops-telegram" id="ops-telegram">
+  <button type="button" class="collapsible-head">
+    <div class="collapsible-head-main">
+      <span class="collapsible-title">텔레그램 연결 {% if telegram_connected %}<span class="badge b-mint">연결됨</span>{% else %}<span class="badge b-warn">연결 안 됨</span>{% endif %}</span>
+      <span class="collapsible-summary">봇 토큰·채팅 ID는 환경변수로만 설정 (보안)</span>
+    </div>
+    <span class="collapsible-affordance" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M3 5 L7 9 L11 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+  </button>
+  <div class="collapsible-body"><div class="inner"><div class="collapsible-body-inner">
+    <div class="kv-row"><span class="kv-key">상태</span><span class="kv-val {% if telegram_connected %}pos{% else %}warn{% endif %}">{{ '연결됨' if telegram_connected else '연결 안 됨' }}</span></div>
+
+    <div class="card-head mt-12 mb-8"><span class="card-title">설정 가이드</span></div>
+    <ol class="row-gap" style="counter-reset: step;">
+      <li class="kv-row"><span class="kv-key">1단계</span><span class="kv-val" style="text-align: left;">텔레그램에서 <code>@BotFather</code>에게 <code>/newbot</code> 입력 → 봇 토큰 받기</span></li>
+      <li class="kv-row"><span class="kv-key">2단계</span><span class="kv-val" style="text-align: left;">봇과 대화 시작 → <code>https://api.telegram.org/bot&lt;토큰&gt;/getUpdates</code>로 chat_id 확인</span></li>
+      <li class="kv-row"><span class="kv-key">3단계</span><span class="kv-val" style="text-align: left;">서버 <code>.env</code>에 <code>TELEGRAM_BOT_TOKEN</code>, <code>TELEGRAM_ALLOWED_CHAT_ID</code> 추가 후 재시작</span></li>
+    </ol>
+
+    <div class="card-head mt-12 mb-8"><span class="card-title">웹훅 URL</span></div>
+    <div class="flex gap-8 items-center">
+      <code style="flex: 1; word-break: break-all;">{{ webhook_url }}</code>
+      <button type="button" class="ghost sm" data-copy="{{ webhook_url }}">복사</button>
+    </div>
+    <p class="muted fs-12 mt-8">텔레그램에 이 URL을 등록하면 봇 버튼으로 승인/거절을 처리할 수 있습니다.</p>
+    <p class="muted fs-12 mt-8">⚠️ 화면에서 토큰을 직접 저장하지 않습니다. DB 노출 위험을 피하기 위해서입니다.</p>
+  </div></div></div>
+</section>
+
+{# ============ LEARNING NOTES ============ #}
+<section class="collapsible" data-collapsible="ops-notes" id="ops-notes">
+  <button type="button" class="collapsible-head">
+    <div class="collapsible-head-main">
+      <span class="collapsible-title">학습 노트 (자동 회고)</span>
+      <span class="collapsible-summary">{{ learning_notes | length }}개</span>
+    </div>
+    <span class="collapsible-affordance" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M3 5 L7 9 L11 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+  </button>
+  <div class="collapsible-body"><div class="inner"><div class="collapsible-body-inner">
+    {% if not learning_notes %}
+      {{ empty_state('학습 노트 없음', desc='10일 보수적 수익이 -8% 이하로 떨어지면 자동으로 작성됩니다.', cta_label='', cta_href='') }}
+    {% else %}
+      <div class="row-gap">
+        {% for note in learning_notes %}
+          <div class="expand-row" data-expand-row>
+            <div class="expand-row-main">
+              <span class="ticker" style="font-size: 14px;">{{ note.ticker or '— 일반' }}</span>
+              <span class="badge b-warn">{{ note.confidence_tier }}</span>
+              <span class="muted fs-12 tnum">{{ note.created_at.strftime('%m-%d') }}</span>
+              <span class="muted fs-12" style="flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ note.failure_reason }}</span>
+            </div>
+            <span class="expand-row-icon">▾</span>
+          </div>
+          <div class="expand-row-detail"><div class="inner"><div class="expand-row-detail-inner">
+            <div class="kv-row"><span class="kv-key">증거</span><span class="kv-val" style="text-align: left;">{{ note.evidence }}</span></div>
+            <div class="kv-row"><span class="kv-key">규칙 변경 제안</span><span class="kv-val" style="text-align: left;">{{ note.suggested_rule_change }}</span></div>
+            {% if note.memo_id %}
+              <div class="mt-8"><a class="btn ghost sm inline" href="/memos/{{ note.memo_id }}">관련 의견서 →</a></div>
+            {% endif %}
+          </div></div></div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div></div></div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,31 @@
+{# Collapsible card.
+   id: hash key (e.g. "dash-runs")
+   title: header title
+   summary: 1-line summary (mono)
+   open: bool, default open
+#}
+{% macro card_open(id, title, summary='', open=False, badge=None) -%}
+<section class="collapsible {% if open %}is-open{% endif %}" data-collapsible="{{ id }}">
+  <button type="button" class="collapsible-head" aria-expanded="{{ 'true' if open else 'false' }}">
+    <div class="collapsible-head-main">
+      <span class="collapsible-title">
+        {{ title }}
+        {%- if badge %} <span class="badge {{ badge.cls | default('b-neutral') }}">{{ badge.text }}</span>{%- endif -%}
+      </span>
+      {%- if summary %}<span class="collapsible-summary">{{ summary }}</span>{%- endif %}
+    </div>
+    <span class="collapsible-affordance" aria-hidden="true">
+      <svg width="14" height="14" viewBox="0 0 14 14"><path d="M3 5 L7 9 L11 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </span>
+  </button>
+  <div class="collapsible-body">
+    <div class="inner">
+      <div class="collapsible-body-inner">
+{%- endmacro %}
+
+{% macro card_close() -%}
+      </div>
+    </div>
+  </div>
+</section>
+{%- endmacro %}

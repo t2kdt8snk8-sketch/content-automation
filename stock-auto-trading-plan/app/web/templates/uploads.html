@@ -1,84 +1,159 @@
 {% extends "base.html" %}
+{% from "_components/empty_state.html" import empty_state %}
 {% block content %}
 
 <div class="page-header">
   <p class="eyebrow">Data Intake</p>
   <h1 class="page-title">데이터 관리</h1>
-  <p class="page-lede">관심종목은 한 번 넣어두면 자동 수집 루틴이 사용한다. CSV는 자동 수집 실패 시 백업 입력용.</p>
+  <p class="page-lede">관심종목과 가격, 이벤트 데이터를 관리합니다. 자동 수집 실패 시 CSV 업로드로 백업할 수 있습니다.</p>
 </div>
 
 {# Summary #}
-<div class="stat-grid" style="grid-template-columns: repeat(2, 1fr); max-width: 300px; margin-bottom: 20px;">
+<div class="stat-grid" style="grid-template-columns: repeat(2, 1fr); max-width: 360px; margin-bottom: 16px;">
   <div class="stat-card s-accent">
     <div class="stat-label">관심종목</div>
-    <div class="stat-value">{{ items|length }}</div>
+    <div class="stat-value tnum">{{ items|length }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">이벤트</div>
+    <div class="stat-value tnum">{{ event_count }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">S&P 500</div>
+    <div class="stat-value tnum">{{ sp500_count or 0 }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">NASDAQ 100</div>
+    <div class="stat-value tnum">{{ nasdaq100_count or 0 }}</div>
   </div>
 </div>
 
 {% if message %}<div class="notice">{{ message }}</div>{% endif %}
+{% if warnings %}
+  <div class="card mb-12">
+    <div class="card-head">
+      <span class="card-title">경고</span>
+      <span class="card-meta">{{ warnings | length }}건</span>
+    </div>
+    <ul class="insight-list bad">
+      {% for w in warnings[:10] %}<li>{{ w }}</li>{% endfor %}
+    </ul>
+  </div>
+{% endif %}
 
 {# Section Tabs #}
-<div class="section-tabs">
-  <button class="section-tab active" data-sec="add">종목 추가</button>
-  <button class="section-tab" data-sec="csv">CSV 업로드</button>
-  <button class="section-tab" data-sec="list">목록</button>
+<div class="section-tabs" data-tab-group="uploads">
+  <button type="button" class="section-tab active" data-tab="add">종목 추가</button>
+  <button type="button" class="section-tab" data-tab="universe">자동 유니버스</button>
+  <button type="button" class="section-tab" data-tab="watch-csv">관심종목 CSV</button>
+  <button type="button" class="section-tab" data-tab="prices-csv">가격 CSV</button>
+  <button type="button" class="section-tab" data-tab="events-csv">이벤트 CSV</button>
+  <button type="button" class="section-tab" data-tab="list">목록</button>
 </div>
 
-{# ADD #}
-<div class="section-panel active" id="sec-add">
+<div class="memo-tab-panel active" data-tab-panel-group="uploads" data-tab-panel="add">
   <div class="card">
-    <div class="card-head">
-      <span class="card-title">관심종목 추가</span>
-      <span class="card-meta">watchlist</span>
-    </div>
+    <div class="card-head"><span class="card-title">관심종목 추가</span><span class="card-meta">watchlist</span></div>
     <form method="post" action="/watchlist" class="form-stack">
       <div>
-        <label for="ticker">Ticker</label>
-        <input id="ticker" name="ticker" placeholder="예: AAPL" required>
+        <label for="ticker">티커</label>
+        <input id="ticker" type="text" name="ticker" placeholder="예: AAPL" required autocomplete="off">
       </div>
       <div>
         <label for="name">이름</label>
-        <input id="name" name="name" placeholder="Apple Inc.">
+        <input id="name" type="text" name="name" placeholder="Apple Inc.">
       </div>
       <div>
         <label for="sector">섹터</label>
-        <input id="sector" name="sector" placeholder="Technology">
+        <input id="sector" type="text" name="sector" placeholder="Technology">
       </div>
       <div>
         <label for="notes">메모</label>
         <textarea id="notes" name="notes" placeholder="기타 메모"></textarea>
       </div>
-      <button class="primary">저장</button>
+      <button type="submit" class="primary">저장 후 다음 단계로</button>
     </form>
   </div>
 </div>
 
-{# CSV #}
-<div class="section-panel" id="sec-csv">
-  <div class="card section-gap">
-    <div class="card-head">
-      <span class="card-title">관심종목 CSV</span>
-      <span class="card-meta">watchlist import</span>
+<div class="memo-tab-panel" data-tab-panel-group="uploads" data-tab-panel="universe">
+  <div class="card">
+    <div class="card-head"><span class="card-title">시장 전체 후보군 갱신</span><span class="card-meta">S&P500 / NASDAQ100</span></div>
+    <p class="muted fs-12 mb-12">자동 유니버스는 종목 목록만 갱신합니다. 실제 가격 수집과 학습은 대시보드의 데이터 수집 파이프라인에서 진행됩니다.</p>
+    <div class="row-gap">
+      <form method="post" action="/universe/refresh">
+        <input type="hidden" name="source" value="sp500">
+        <button type="submit" class="primary">S&P 500 갱신</button>
+      </form>
+      <form method="post" action="/universe/refresh">
+        <input type="hidden" name="source" value="nasdaq100">
+        <button type="submit" class="primary">NASDAQ 100 갱신</button>
+      </form>
     </div>
+  </div>
+</div>
+
+<div class="memo-tab-panel" data-tab-panel-group="uploads" data-tab-panel="watch-csv">
+  <div class="card">
+    <div class="card-head"><span class="card-title">관심종목 CSV</span><span class="card-meta">필수 컬럼: ticker, name, sector, notes</span></div>
+    <p class="muted fs-12 mb-12">예시: <code>AAPL,Apple Inc.,Technology,장기 모니터링</code></p>
     <form method="post" action="/uploads/watchlist" enctype="multipart/form-data" class="form-stack">
       <input type="file" name="file" accept=".csv" required>
-      <button>관심종목 CSV 업로드</button>
-    </form>
-  </div>
-  <div class="card">
-    <div class="card-head">
-      <span class="card-title">가격 CSV</span>
-      <span class="card-meta">price data</span>
-    </div>
-    <form method="post" action="/uploads/prices" enctype="multipart/form-data" class="form-stack">
-      <input type="file" name="file" accept=".csv" required>
-      <button>가격 CSV 업로드</button>
+      <button type="submit" class="primary">업로드</button>
     </form>
   </div>
 </div>
 
-{# LIST #}
-<div class="section-panel" id="sec-list">
+<div class="memo-tab-panel" data-tab-panel-group="uploads" data-tab-panel="prices-csv">
+  <div class="card">
+    <div class="card-head"><span class="card-title">가격 CSV</span><span class="card-meta">OHLCV + 수정주가</span></div>
+    <p class="muted fs-12 mb-12">필수 컬럼: <code>ticker, date, open, high, low, close, volume, adjusted_close</code></p>
+    <form method="post" action="/uploads/prices" enctype="multipart/form-data" class="form-stack">
+      <input type="file" name="file" accept=".csv" required>
+      <button type="submit" class="primary">업로드</button>
+    </form>
+  </div>
+</div>
+
+<div class="memo-tab-panel" data-tab-panel-group="uploads" data-tab-panel="events-csv">
+  <div class="card">
+    <div class="card-head"><span class="card-title">이벤트 CSV</span><span class="card-meta">뉴스·공시·실적 발표</span></div>
+    <p class="muted fs-12 mb-12">필수 컬럼: <code>ticker, event_date, available_at, event_type, sentiment_score, uncertainty_score, guidance_score, risk_score, summary, source_url</code></p>
+    <p class="muted fs-12 mb-12">감성 점수는 −1~+1 범위. AI 의견서 생성 시 자동 참조됩니다.</p>
+    <form method="post" action="/uploads/events" enctype="multipart/form-data" class="form-stack">
+      <input type="file" name="file" accept=".csv" required>
+      <button type="submit" class="primary">업로드</button>
+    </form>
+  </div>
+
+  {% if recent_events %}
+    <div class="card mt-12">
+      <div class="card-head"><span class="card-title">최근 이벤트</span><span class="card-meta">최근 5건</span></div>
+      <div class="row-gap">
+        {% for e in recent_events %}
+          <div class="expand-row" data-expand-row>
+            <div class="expand-row-main">
+              <span class="ticker" style="font-size: 14px;">{{ e.ticker }}</span>
+              <span class="muted fs-12 tnum">{{ e.event_date }}</span>
+              <span class="badge b-neutral">{{ e.event_type }}</span>
+            </div>
+            <span class="expand-row-icon">▾</span>
+          </div>
+          <div class="expand-row-detail"><div class="inner"><div class="expand-row-detail-inner">
+            <div class="kv-row"><span class="kv-key">감성</span><span class="kv-val tnum">{{ "%.2f"|format(e.sentiment_score) }}</span></div>
+            <div class="kv-row"><span class="kv-key">불확실성</span><span class="kv-val tnum">{{ "%.2f"|format(e.uncertainty_score) }}</span></div>
+            <div class="kv-row"><span class="kv-key">가이던스</span><span class="kv-val tnum">{{ "%.2f"|format(e.guidance_score) }}</span></div>
+            <div class="kv-row"><span class="kv-key">위험</span><span class="kv-val tnum">{{ "%.2f"|format(e.risk_score) }}</span></div>
+            <p class="mt-8" style="font-size: 13px;">{{ e.summary }}</p>
+            {% if e.source_url %}<p class="mt-8 fs-12"><a href="{{ e.source_url }}" target="_blank" rel="noopener" style="color: var(--info);">원문 →</a></p>{% endif %}
+          </div></div></div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+</div>
+
+<div class="memo-tab-panel" data-tab-panel-group="uploads" data-tab-panel="list">
   {% if items %}
     <div class="watchlist-grid">
       {% for item in items %}
@@ -90,22 +165,8 @@
       {% endfor %}
     </div>
   {% else %}
-    <p class="empty-state">관심종목 없음. 종목 추가 탭에서 추가.</p>
+    {{ empty_state('관심종목 없음', desc='첫 종목을 추가하면 자동 수집이 시작됩니다.', cta_label='종목 추가 →', cta_href='#') }}
   {% endif %}
 </div>
 
-<script>
-  (function() {
-    var tabs = document.querySelectorAll('.section-tab');
-    var panels = document.querySelectorAll('.section-panel');
-    tabs.forEach(function(tab) {
-      tab.addEventListener('click', function() {
-        tabs.forEach(function(t) { t.classList.remove('active'); });
-        panels.forEach(function(p) { p.classList.remove('active'); });
-        tab.classList.add('active');
-        document.getElementById('sec-' + tab.dataset.sec).classList.add('active');
-      });
-    });
-  })();
-</script>
 {% endblock %}
