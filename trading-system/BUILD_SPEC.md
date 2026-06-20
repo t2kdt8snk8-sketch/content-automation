@@ -46,7 +46,7 @@
 | `cache_dir` | str | `"data/cache"` | |
 
 - `Config.load()` 클래스메서드로 `.env`/환경변수 오버라이드 허용(키 같은 민감값만).
-- **합격선 상수**(`PASS_EXCESS_CAGR=0.02`, `PASS_MAX_MDD=-0.35`)도 여기 명시 — 백테스트 전에 박아둔다.
+- **합격선 상수**(`PASS_EXCESS_CAGR=0.03`(0.03~0.05 범위, 운영자 확정), `PASS_MAX_MDD=-0.35`)도 여기 명시 — 백테스트 전에 박아둔다. 생존편향으로 초과수익이 부풀려질 수 있어 보수적으로 높게 잡는다.
 
 **완료기준:** `from config import Config; Config()` 가 기본값으로 생성되고 출력됨.
 
@@ -189,10 +189,11 @@ def oos_check(prices, sectors, cfg, split_date: str) -> dict:
   - 체결가는 `t+1`의 **시가**(`Open`). 종가로 신호 만들고 종가로 체결 = 누수.
   - → 어댑터에서 시가도 받아와야 함(`get_prices`에 OHLC 옵션 또는 별도 시가 DF).
 - **비용:** 매 리밸 회전율 × (`slippage_bps + commission_bps`) / 10000 을 수익에서 차감. 회전율 = Σ|새비중-옛비중|/2.
-- **생존편향 한계:** `BacktestResult.metrics`에 `survivorship_warning: True` + 리포트 텍스트 항상 포함.
+- **생존편향 한계:** `BacktestResult.metrics`에 `survivorship_warning: True` + 리포트 텍스트 항상 포함. 텍스트엔 "현재 구성종목 사용 → SPY 대비 초과수익도 부풀려질 수 있음, 백테스트 통과 = 실거래 자격이 아니라 페이퍼로 넘어갈 최소 허들"을 명시.
+- **OOS 소모 규칙:** OOS 결과를 본 뒤 전략을 수정하면 그 OOS는 소모된 것으로 간주(새 검증 기간 없이 재합격 판정 금지). 코드보다 운영 규율이라 `run_backtest` 상단 주석 + 리포트에 한 줄 박는다.
 - **재현성:** 같은 입력 → 같은 출력(난수 없음). 있으면 시드 고정.
 - **과최적화 가드:** `compare_versions`는 **2~3개로 제한**. 파라미터 그리드서치 만들지 말 것.
-- **합격 판정 헬퍼:** `passes_gate(metrics, oos_metrics, cfg) -> bool` — config의 합격선 상수로만 판정.
+- **합격 판정 헬퍼:** `passes_gate(metrics, oos_metrics, cfg) -> bool` — config의 합격선 상수로만 판정. 통과해도 반환값은 "페이퍼 진행 자격"이지 "실거래 자격"이 아님.
 - 자산곡선/벤치마크 그래프 저장(`matplotlib`, `logs/`에 png).
 
 ### 완료기준 / 테스트(`tests/test_backtest.py`)
